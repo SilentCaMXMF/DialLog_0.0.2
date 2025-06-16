@@ -1,11 +1,14 @@
 package com.example.diallog002
 
 import android.Manifest
+import android.app.Service
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Environment
+import android.os.IBinder
 import android.provider.ContactsContract
+import android.util.Log
 import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -42,7 +45,8 @@ class MainActivity : AppCompatActivity() {
 
         recyclerViewContacts = findViewById(R.id.recyclerViewContacts)
         recyclerViewContacts.layoutManager = LinearLayoutManager(this)
-        contactsAdapter = ContactsAdapter(mutableListOf(), this::selectContact) // Initialize properly
+        contactsAdapter =
+            ContactsAdapter(mutableListOf(), this::selectContact) // Initialize properly
         recyclerViewContacts.adapter = contactsAdapter
 
         loadContacts() // Load contacts here
@@ -88,8 +92,10 @@ class MainActivity : AppCompatActivity() {
 
         cursor?.use {
             while (it.moveToNext()) {
-                val name = it.getString(it.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME))
-                val phoneNumber = it.getString(it.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.NUMBER))
+                val name =
+                    it.getString(it.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME))
+                val phoneNumber =
+                    it.getString(it.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.NUMBER))
                 contactsList.add(Contact(name, phoneNumber))
             }
         }
@@ -122,7 +128,12 @@ class MainActivity : AppCompatActivity() {
             Manifest.permission.RECORD_AUDIO,
             Manifest.permission.READ_CONTACTS
         )
-        return permissions.all { ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED }
+        return permissions.all {
+            ContextCompat.checkSelfPermission(
+                this,
+                it
+            ) == PackageManager.PERMISSION_GRANTED
+        }
     }
 
     private fun requestPermissionsIfNeeded() {
@@ -154,7 +165,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateLoggingButton() {
         val buttonStartLogging: Button = findViewById(R.id.buttonStartLogging)
-        buttonStartLogging.text = if (isLogging) getString(R.string.stop_logging) else getString(R.string.start_logging)
+        buttonStartLogging.text =
+            if (isLogging) getString(R.string.stop_logging) else getString(R.string.start_logging)
     }
 
     private fun loadLogs() {
@@ -169,7 +181,10 @@ class MainActivity : AppCompatActivity() {
         logsDir.listFiles()?.forEach { file ->
             if (file.extension == "txt") {
                 val logEntry = parseLogFile(file)
-                val contact = Contact(logEntry.phoneNumber, logEntry.phoneNumber) // Replace with actual contact matching logic
+                val contact = Contact(
+                    logEntry.phoneNumber,
+                    logEntry.phoneNumber
+                ) // Replace with actual contact matching logic
                 if (!contactLogs.containsKey(contact)) {
                     contactLogs[contact] = mutableListOf()
                 }
@@ -209,12 +224,15 @@ class MainActivity : AppCompatActivity() {
                     line.startsWith("PhoneNumber:") -> {
                         phoneNumber = line.substringAfter("PhoneNumber:").trim()
                     }
+
                     line.startsWith("CallDuration:") -> {
                         callDuration = line.substringAfter("CallDuration:").trim().toLong()
                     }
+
                     line.startsWith("ListeningTime:") -> {
                         listeningTime = line.substringAfter("ListeningTime:").trim().toLong()
                     }
+
                     line.startsWith("SpeakingTime:") -> {
                         speakingTime = line.substringAfter("SpeakingTime:").trim().toLong()
                     }
@@ -227,4 +245,54 @@ class MainActivity : AppCompatActivity() {
 
         return LogEntry(phoneNumber, callDuration, listeningTime, speakingTime)
     }
+}
+class MyCallLoggingService : Service() { // Or your Activity
+
+    private lateinit var callStateMonitor: CallStateMonitor
+
+    override fun onCreate() {
+        super.onCreate()
+
+        callStateMonitor = CallStateMonitor(applicationContext) { isActive, isNearEar ->
+            // This callback is invoked when call state changes OR proximity changes during an active call
+            Log.d("MyService", "Call Active: $isActive, Phone Near Ear: $isNearEar")
+
+            if (isActive && isNearEar) {
+                // Now you know a call is active AND the phone is likely at the user's ear.
+                // The microphone monitoring inside CallStateMonitor will be (re)started.
+                // You can update UI or logs here if needed, based on this combined state.
+                updateStatusNotification("Call in progress (at ear)...")
+            } else if (isActive && !isNearEar) {
+                // Call is active, but phone is NOT at the ear (e.g., on speaker, table)
+                // Microphone monitoring inside CallStateMonitor will be paused/stopped.
+                updateStatusNotification("Call in progress (away from ear)...")
+            } else {
+                // Call is not active
+                updateStatusNotification("Idle...")
+            }
+        }
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        // Request permissions (READ_PHONE_STATE, RECORD_AUDIO) here if not already granted
+        // ...
+
+        callStateMonitor.startListeningToCallState()
+        // Make this a foreground service if it needs to run reliably during calls
+        // startForeground(...)
+        return START_STICKY
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        callStateMonitor.stopListeningToCallState()
+    }
+
+    private fun updateStatusNotification(message: String) {
+        // Logic to show/update a status notification, especially if it's a foreground service
+        Log.d("MyService", "Status: $message")
+    }
+
+    // ... (IBinder for Service)
+    override fun onBind(intent: Intent?): IBinder? = null
 }

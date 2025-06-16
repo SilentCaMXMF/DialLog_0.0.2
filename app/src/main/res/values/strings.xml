@@ -15,6 +15,8 @@
     <string name="stop_logging">Stop Logging</string>
     <string name="start_logging">Start Logging</string>
     <string name="log_entry_format">Phone: %1$s\nDuration: %2$d ms\nListening: %3$d ms\nSpeaking: %4$d ms</string>
+    <string name="add_contact">Add contact</string>
+    <string name="active_contacts">Active Contacts</string>
 
 
 </resources>
