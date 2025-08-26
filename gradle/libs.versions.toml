@@ -35,7 +35,8 @@ androidx-recyclerview = { group = "androidx.recyclerview", name = "recyclerview"
 firebase-vertexai = { group = "com.google.firebase", name = "firebase-vertexai", version.ref = "firebaseVertexai" }
 
 [plugins]
-android-application = { id = "com.android.application", version.ref = "agp" }
-jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-google-gms-google-services = { id = "com.google.gms.google-services", version.ref = "googleGmsGoogleServices" }
+android-application = { id = "com.android.application", version = "8.5.2" } # example
+jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version = "1.9.24" }
+google-services = { id = "com.google.gms.google-services", version = "4.4.1" }
+
 

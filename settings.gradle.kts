@@ -14,7 +14,6 @@ pluginManagement {
     }
 }
 dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         google()
         mavenCentral()
@@ -23,4 +22,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "DialLog 0.0.2"
 include(":app")
- 

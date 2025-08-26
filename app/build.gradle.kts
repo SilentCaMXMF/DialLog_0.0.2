@@ -1,17 +1,17 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
-    id("com.google.gms.google-services")
-
+    id("com.google.gms.google-services") version "4.4.1"
 }
 
+
 android {
-    namespace = "com.example.diallog002"
-    compileSdk = 34
+    namespace = "com.example.diallog_002"
+        compileSdk = 34  // <- Add this
 
     defaultConfig {
-        applicationId = "com.example.diallog002"
-        minSdk = 24
+        applicationId = "com.example.diallog_002"
+        minSdk = 21
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -31,19 +31,24 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
+
     kotlinOptions {
         jvmTarget = "1.8"
     }
+
     buildFeatures {
         compose = true
     }
+
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"
     }
+
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
