@@ -2,15 +2,16 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
     id("com.google.gms.google-services") version "4.4.1"
+    id("org.jetbrains.kotlin.kapt") version "1.9.24"
 }
 
 
 android {
-    namespace = "com.example.diallog_002"
+    namespace = "com.example.diallog002"
         compileSdk = 34  // <- Add this
 
     defaultConfig {
-        applicationId = "com.example.diallog_002"
+        applicationId = "com.example.diallog002"
         minSdk = 21
         targetSdk = 34
         versionCode = 1
@@ -46,7 +47,7 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.2"
+        kotlinCompilerExtensionVersion = "1.5.14"
     }
 
     packaging {
@@ -79,4 +80,8 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(platform("com.google.firebase:firebase-bom:33.2.0"))
     implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.android.material:material:1.12.0")
+    implementation("androidx.room:room-runtime:2.6.1")
+    implementation("androidx.room:room-ktx:2.6.1")
+    kapt("androidx.room:room-compiler:2.6.1")
 }

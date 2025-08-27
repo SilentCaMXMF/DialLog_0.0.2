@@ -112,7 +112,8 @@ class MainActivity : AppCompatActivity() {
         val callLog = CallLog(
             contactName = contactName,
             speakingTime = speakingTime,
-            listeningTime = listeningTime
+            listeningTime = listeningTime,
+            timestamp = java.util.Date()
         )
         CallLogManager.addCallLog(callLog)
 
