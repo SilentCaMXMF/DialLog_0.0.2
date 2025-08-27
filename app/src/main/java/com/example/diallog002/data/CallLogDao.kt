@@ -1,21 +1,32 @@
 package com.example.diallog002.data
 
-import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.Query
-import androidx.room.Update
+import androidx.room.*
 
 @Dao
 interface CallLogDao {
     @Insert
-    suspend fun insertCallLog(callLog: CallLog)
+    suspend fun insert(callLog: CallLog)
 
     @Query("SELECT * FROM call_logs ORDER BY timestamp DESC")
     suspend fun getAllCallLogs(): List<CallLog>
 
-    @Query("SELECT * FROM call_logs WHERE favorite = 1 ORDER BY contactName ASC")
-    suspend fun getFavoriteContacts(): List<CallLog>
+    @Query("SELECT * FROM call_logs WHERE contactName = :contactName ORDER BY timestamp DESC")
+    suspend fun getCallLogsByContact(contactName: String): List<CallLog>
 
-    @Query("UPDATE call_logs SET favorite = :isFavorite WHERE id = :id")
-    suspend fun updateFavoriteStatus(id: Int, isFavorite: Boolean)
+    @Query("""
+        SELECT * FROM call_logs c1 
+        WHERE timestamp = (
+            SELECT MAX(timestamp) 
+            FROM call_logs c2 
+            WHERE c2.contactName = c1.contactName
+        )
+        ORDER BY timestamp DESC
+    """)
+    suspend fun getMostRecentCallPerContact(): List<CallLog>
+
+    @Delete
+    suspend fun delete(callLog: CallLog)
+
+    @Query("DELETE FROM call_logs")
+    suspend fun deleteAll()
 }

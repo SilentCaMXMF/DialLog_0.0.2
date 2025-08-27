@@ -3,13 +3,107 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:gravity="center">
+    android:padding="16dp">
 
-    <Button
-        android:id="@+id/select_contact_button"
-        android:layout_width="wrap_content"
+    <TextView
+        android:id="@+id/status_text"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Start/Stop Tracking" />
+        android:text="Ready to track calls"
+        android:textSize="16sp"
+        android:gravity="center"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:id="@+id/current_call_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="No active tracking"
+        android:textSize="14sp"
+        android:gravity="center"
+        android:layout_marginBottom="16dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginBottom="16dp">
+
+        <Button
+            android:id="@+id/select_contact_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Start Tracking"
+            android:layout_marginEnd="16dp" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fabStartCall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="Start/Stop"
+            android:src="@android:drawable/ic_media_play" />
+
+    </LinearLayout>
+
+    <!-- Test Call Logging Button -->
+    <Button
+        android:id="@+id/test_call_logging_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Test Call Logging (Create Sample Log)"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Search Bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="8dp">
+
+        <EditText
+            android:id="@+id/search_edit_text"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="Search contacts..."
+            android:inputType="text"
+            android:padding="12dp"
+            android:background="@android:drawable/editbox_background"
+            android:layout_marginEnd="8dp" />
+
+        <Button
+            android:id="@+id/clear_search_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Clear"
+            android:textSize="12sp" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="8dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Contacts (tap star to add to favorites)"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/view_history_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="View History"
+            android:textSize="12sp" />
+
+    </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
@@ -17,11 +111,4 @@
         android:layout_height="0dp"
         android:layout_weight="1" />
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fabStartCall"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="end"
-        android:contentDescription="Start"
-        android:src="@android:drawable/ic_media_play" />
 </LinearLayout>
