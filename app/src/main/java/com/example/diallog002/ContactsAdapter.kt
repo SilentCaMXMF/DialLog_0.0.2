@@ -8,7 +8,7 @@ import androidx.recyclerview.widget.RecyclerView
 
 class ContactsAdapter(
     private var contacts: List<Contact>,
-    private val onContactSelected: (Contact) -> Unit
+    private val onContactSelected: ((Contact) -> Unit)? = null
 ) : RecyclerView.Adapter<ContactsAdapter.ContactViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ContactViewHolder {
@@ -39,7 +39,7 @@ class ContactsAdapter(
             phoneTextView.text = contact.phoneNumber
 
             itemView.setOnClickListener {
-                onContactSelected(contact)
+                onContactSelected?.invoke(contact)
             }
         }
     }

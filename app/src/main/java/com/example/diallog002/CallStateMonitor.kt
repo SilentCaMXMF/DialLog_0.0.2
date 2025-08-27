@@ -25,6 +25,8 @@ class CallStateMonitor(
 
     private var isCallActive = false
     private var isNearEar = false // Track proximity state
+    private var isMonitoringMic: Boolean = false
+    private var job: Job? = null
 
     private val proximityManager = ProximitySensorManager(context) { currentlyNear ->
         val oldNearState = isNearEar
