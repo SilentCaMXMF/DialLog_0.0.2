@@ -1,13 +1,86 @@
 
-# DialLog 0.0.2 - Get to the point
+# DialLog 0.0.2 🎯
+*Transform your conversations through self-awareness*
 
-## My 1st Mobile app , a speak/listen call counter that analizes your type of speech attitude in a given conversation
+DialLog is an Android app that analyzes your communication patterns by tracking the balance between speaking and listening during phone calls.
 
-- The idea is to register the amount of time one spends talking in oposition to listening in a given call. The data can be ordered to match contacts and create a historical record of talk/listen times of conversations with a given contact.  
-- Patterns of conversation immerge and one can distinguish between passive dialog attitudes and aggressive/impossing ones.  
-- The goal of the app is to identify this patterns and help in conversation and communication improvement.
-- Silence is also taken in to account for calculations.
+---
 
-### Gui and math still under development
+## 🌟 What is DialLog?
 
-### ChatGPT and Cursor are helping me configure all Kotlin and Gradle dependencies and build struture debugging work , at the moment i´m only working on testing on android device to perform several improvements
+A speak/listen call counter that reveals your communication tendencies by measuring talk-to-listen ratios across different contacts and conversations.
+
+## 📊 Key Features
+
+- **Real-time Call Analysis** - Monitor speaking vs. listening time during active calls
+- **Contact-based Tracking** - Organize data by individual contacts
+- **Historical Records** - Maintain conversation history with each contact
+- **Pattern Recognition** - Identify trends in your communication style
+- **Silence Detection** - Accurate calculations including silent periods
+
+## 🎯 Purpose
+
+The goal is simple: **awareness leads to improvement**. By understanding your communication patterns, you can:
+
+- Recognize passive vs. aggressive conversational styles
+- Build better relationships through balanced dialogue
+- Develop more mindful communication habits
+
+## 🚧 Current Status
+
+> ⚠️ **Work in Progress** - Early development version with active improvements
+
+### Working
+- Basic call monitoring
+- Time tracking infrastructure
+- Data collection framework
+
+### In Development
+- GUI enhancements
+- Mathematical model refinement
+- Android performance optimization
+- Kotlin/Gradle configuration
+
+## 🛠️ Tech Stack
+
+- **Language:** Kotlin
+- **Platform:** Android
+- **Build:** Gradle
+- **Tools:** Android Studio + AI assistance
+
+## 🚀 Getting Started
+
+```bash
+git clone https://github.com/SilentCaMXMF/DialLog_0.0.2.git
+Open in Android Studio
+Sync Gradle dependencies
+Build and run on Android device
+```
+## 💡 Usage Examples
+- **Sales:** Maintain ideal 43:57 talk-to-listen ratio  
+- **Relationships:** Ensure balanced conversations  
+- **Self-improvement:** Track communication patterns  
+- **Professional:** Develop better listening skills  
+
+## 🤝 Development
+Built as a first mobile app project with assistance from:  
+- ChatGPT (code structure & debugging)  
+- Cursor (dependency management)  
+- Kotlin + Gradle ecosystem  
+
+## 📈 Future Plans
+- Enhanced GUI with visualizations  
+- Advanced analytics dashboard  
+- Export functionality  
+- Real-time feedback  
+- iOS version  
+
+## 🙋‍♂️ About
+First mobile application — a learning project exploring Android development and communication psychology.
+
+## 📄 License
+Open source under MIT License.
+
+---
+
+**DialLog 0.0.2** — *Get to the point, but make sure you're listening when you get there.*
