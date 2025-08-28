@@ -10,4 +10,4 @@
 
 ### Gui and math still under development
 
-### ChatGPT is helping me figure out how Kotlin struture and programing work , at the moment i can only work in testing enviroment has i do not have an android device to perform prodution testing
+### ChatGPT and Cursor are helping me configure all Kotlin and Gradle dependencies and build struture debugging work , at the moment i´m only working on testing on android device to perform several improvements
