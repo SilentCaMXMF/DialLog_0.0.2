@@ -186,4 +186,19 @@ interface CallLogDao {
 
     @Query("DELETE FROM call_logs")
     suspend fun deleteAll()
+    
+    @Query("DELETE FROM call_logs WHERE contactName = :contactName")
+    suspend fun deleteCallLogsByContact(contactName: String)
+    
+    @Query("DELETE FROM call_logs WHERE id = :id")
+    suspend fun deleteById(id: Int)
+    
+    @Query("SELECT COUNT(*) FROM call_logs WHERE contactName = :contactName")
+    suspend fun getCallLogsCountByContact(contactName: String): Int
+    
+    @Query("SELECT COALESCE(SUM(speakingTime), 0) FROM call_logs WHERE contactName = :contactName")
+    suspend fun getTotalSpeakingTimeByContact(contactName: String): Long
+    
+    @Query("SELECT COALESCE(SUM(listeningTime), 0) FROM call_logs WHERE contactName = :contactName")
+    suspend fun getTotalListeningTimeByContact(contactName: String): Long
 }

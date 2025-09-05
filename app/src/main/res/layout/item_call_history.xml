@@ -26,7 +26,19 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="12sp"
-            android:textColor="@android:color/darker_gray" />
+            android:textColor="@android:color/darker_gray"
+            android:layout_marginEnd="8dp" />
+            
+        <TextView
+            android:id="@+id/delete_action"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🗑️"
+            android:textSize="16sp"
+            android:padding="4dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true" />
 
     </LinearLayout>
 

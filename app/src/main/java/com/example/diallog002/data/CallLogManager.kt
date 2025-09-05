@@ -36,4 +36,24 @@ object CallLogManager {
     suspend fun deleteAllCallLogs() = withContext(Dispatchers.IO) {
         database?.callLogDao()?.deleteAll()
     }
+    
+    suspend fun deleteCallLogsByContact(contactName: String) = withContext(Dispatchers.IO) {
+        database?.callLogDao()?.deleteCallLogsByContact(contactName)
+    }
+    
+    suspend fun deleteCallLogById(id: Int) = withContext(Dispatchers.IO) {
+        database?.callLogDao()?.deleteById(id)
+    }
+    
+    suspend fun getCallLogsCountByContact(contactName: String): Int = withContext(Dispatchers.IO) {
+        database?.callLogDao()?.getCallLogsCountByContact(contactName) ?: 0
+    }
+    
+    suspend fun getTotalSpeakingTimeByContact(contactName: String): Long = withContext(Dispatchers.IO) {
+        database?.callLogDao()?.getTotalSpeakingTimeByContact(contactName) ?: 0L
+    }
+    
+    suspend fun getTotalListeningTimeByContact(contactName: String): Long = withContext(Dispatchers.IO) {
+        database?.callLogDao()?.getTotalListeningTimeByContact(contactName) ?: 0L
+    }
 }

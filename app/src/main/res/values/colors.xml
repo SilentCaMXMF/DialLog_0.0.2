@@ -52,4 +52,7 @@
     
     <!-- Transparent -->
     <color name="transparent">#00000000</color>
+    
+    <!-- App Icon Colors -->
+    <color name="ic_launcher_background">#FFFFFF</color>  <!-- White background for clean icon -->
 </resources>

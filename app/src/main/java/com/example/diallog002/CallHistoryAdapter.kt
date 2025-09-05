@@ -11,7 +11,8 @@ import java.util.*
 
 class CallHistoryAdapter(
     private var callLogs: List<CallLog>,
-    private val onCallLogClick: (CallLog) -> Unit
+    private val onCallLogClick: (CallLog) -> Unit,
+    private val onDeleteClick: (CallLog) -> Unit
 ) : RecyclerView.Adapter<CallHistoryAdapter.CallHistoryViewHolder>() {
 
     class CallHistoryViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -20,6 +21,7 @@ class CallHistoryAdapter(
         val speakingTime: TextView = itemView.findViewById(R.id.speaking_time_history)
         val listeningTime: TextView = itemView.findViewById(R.id.listening_time_history)
         val totalDuration: TextView = itemView.findViewById(R.id.total_duration_history)
+        val deleteAction: View? = itemView.findViewById(R.id.delete_action)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CallHistoryViewHolder {
@@ -44,6 +46,10 @@ class CallHistoryAdapter(
         
         holder.itemView.setOnClickListener {
             onCallLogClick(callLog)
+        }
+        
+        holder.deleteAction?.setOnClickListener {
+            onDeleteClick(callLog)
         }
     }
 
