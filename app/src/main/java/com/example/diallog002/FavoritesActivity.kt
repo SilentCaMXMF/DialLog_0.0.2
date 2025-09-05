@@ -1,6 +1,8 @@
 package com.example.diallog002
 
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -44,10 +46,11 @@ class FavoritesActivity : AppCompatActivity() {
         
         // Setup Favorites RecyclerView
         favoritesRecyclerView.layoutManager = LinearLayoutManager(this)
-        favoritesAdapter = FavoritesAdapter(favoriteContacts) { contact ->
+        favoritesAdapter = FavoritesAdapter(mutableListOf()) { contact ->
             removeFavorite(contact)
         }
         favoritesRecyclerView.adapter = favoritesAdapter
+        Log.d("FavoritesActivity", "FavoritesAdapter initialized")
         
         // Setup All Contacts RecyclerView
         allContactsRecyclerView.layoutManager = LinearLayoutManager(this)
@@ -190,6 +193,12 @@ class FavoritesActivity : AppCompatActivity() {
         Toast.makeText(this, "Error: $message", Toast.LENGTH_LONG).show()
     }
     
+    override fun onResume() {
+        super.onResume()
+        Log.d("FavoritesActivity", "onResume: Refreshing contacts")
+        loadContacts()
+    }
+    
     override fun onDestroy() {
         super.onDestroy()
         coroutineScope.cancel()
@@ -240,9 +249,18 @@ class FavoritesAdapter(
         newFavorites.forEach { contact ->
             Log.d("FavoritesAdapter", "updateFavorites: ${contact.name} (${contact.id}) - ${contact.phoneNumber}")
         }
-        favorites.clear()
-        favorites.addAll(newFavorites)
-        notifyDataSetChanged()
-        Log.d("FavoritesAdapter", "updateFavorites: Adapter updated, itemCount = ${itemCount}")
+        
+        // Ensure UI updates happen on main thread
+        Handler(Looper.getMainLooper()).post {
+            favorites.clear()
+            favorites.addAll(newFavorites)
+            Log.d("FavoritesAdapter", "updateFavorites: favorites list size after update = ${favorites.size}")
+            
+            notifyDataSetChanged()
+            
+            Handler(Looper.getMainLooper()).post {
+                Log.d("FavoritesAdapter", "updateFavorites: After notifyDataSetChanged, itemCount = ${itemCount}")
+            }
+        }
     }
 }

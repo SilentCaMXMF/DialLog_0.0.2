@@ -41,8 +41,13 @@ class ContactSelectionActivity : AppCompatActivity() {
 
         cursor?.use {
             while (it.moveToNext()) {
-                val name = it.getString(it.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME))
-                contacts.add(name)
+                val nameIndex = it.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME)
+                if (nameIndex >= 0) {
+                    val name = it.getString(nameIndex)
+                    if (!name.isNullOrBlank()) {
+                        contacts.add(name)
+                    }
+                }
             }
         }
         return contacts

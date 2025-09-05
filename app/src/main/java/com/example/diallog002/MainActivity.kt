@@ -8,6 +8,8 @@ import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
@@ -492,6 +494,77 @@ class MainActivity : AppCompatActivity() {
         // Refresh favorites list when returning to this activity
         Log.d("MainActivity", "onResume: Refreshing favorites list")
         tryLoadFavorites()
+    }
+    
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.main_menu, menu)
+        return true
+    }
+    
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.menu_calibrate_microphone -> {
+                openMicrophoneCalibration()
+                true
+            }
+            R.id.menu_settings -> {
+                showSettingsDialog()
+                true
+            }
+            R.id.menu_about -> {
+                showAboutDialog()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+    
+    private fun openMicrophoneCalibration() {
+        Log.d("MainActivity", "Opening microphone calibration")
+        val intent = Intent(this, MicCalibrationActivity::class.java)
+        intent.putExtra("is_recalibration", true)
+        startActivity(intent)
+    }
+    
+    private fun showSettingsDialog() {
+        // Show current calibration status and other settings
+        val prefs = getSharedPreferences("mic_calibration", MODE_PRIVATE)
+        val isCalibrated = prefs.getBoolean("calibration_completed", false)
+        val calibrationDate = prefs.getString("calibration_date", "Never")
+        val backgroundNoise = prefs.getFloat("background_noise_level", -1f)
+        val speakingThreshold = prefs.getFloat("speaking_threshold", -1f)
+        
+        val statusText = if (isCalibrated) {
+            "Microphone Calibrated: $calibrationDate\n" +
+            "Background noise: ${String.format("%.1f", backgroundNoise)} dB\n" +
+            "Speaking threshold: ${String.format("%.1f", speakingThreshold)} dB"
+        } else {
+            "Microphone not yet calibrated\n" +
+            "For best call tracking accuracy, please calibrate your microphone."
+        }
+        
+        android.app.AlertDialog.Builder(this)
+            .setTitle("Settings")
+            .setMessage(statusText)
+            .setPositiveButton("Calibrate Microphone") { _, _ ->
+                openMicrophoneCalibration()
+            }
+            .setNegativeButton("Close", null)
+            .show()
+    }
+    
+    private fun showAboutDialog() {
+        android.app.AlertDialog.Builder(this)
+            .setTitle("About DialLog")
+            .setMessage("DialLog v2.0.0\n\n" +
+                       "Automatic call tracking for your favorite contacts.\n\n" +
+                       "Features:\n" +
+                       "• Microphone calibration for accurate talk/listen tracking\n" +
+                       "• Automatic call detection and logging\n" +
+                       "• Communication analytics and insights\n" +
+                       "• Direct calling from favorites list")
+            .setPositiveButton("OK", null)
+            .show()
     }
     
     override fun onDestroy() {

@@ -1,9 +1,11 @@
 package com.example.diallog002
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.animation.AnimationUtils
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -89,7 +91,17 @@ class SplashActivity : AppCompatActivity() {
     
     private fun startMainActivity() {
         Handler(Looper.getMainLooper()).postDelayed({
-            val intent = Intent(this, MainActivity::class.java)
+            val prefs = getSharedPreferences("MicCalibration", Context.MODE_PRIVATE)
+            val calibrationCompleted = prefs.getBoolean("calibration_completed", false)
+            
+            val intent = if (calibrationCompleted) {
+                Log.d("SplashActivity", "Calibration already completed, going to MainActivity")
+                Intent(this, MainActivity::class.java)
+            } else {
+                Log.d("SplashActivity", "First time launch, going to MicCalibrationActivity")
+                Intent(this, MicCalibrationActivity::class.java)
+            }
+            
             startActivity(intent)
             
             // Add smooth transition

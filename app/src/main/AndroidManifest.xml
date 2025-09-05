@@ -39,5 +39,9 @@
         <activity android:name=".AnalyticsActivity" />
         <activity android:name=".FavoritesActivity" />
         <activity android:name=".CommunicationStyleActivity" />
+        <activity 
+            android:name=".MicCalibrationActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.DialLog002" />
     </application>
 </manifest>
