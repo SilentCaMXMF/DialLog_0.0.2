@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:background="@drawable/splash_background"
+    android:padding="32dp">
+
+    <!-- App Logo/Icon -->
+    <TextView
+        android:id="@+id/logo_icon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="📱"
+        android:textSize="80sp"
+        android:layout_marginBottom="24dp"
+        android:alpha="0"
+        android:textColor="@color/whiteTextColor" />
+
+    <!-- Main Logo Text -->
+    <TextView
+        android:id="@+id/logo_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="DialLog"
+        android:textSize="48sp"
+        android:textStyle="bold"
+        android:textColor="@color/whiteTextColor"
+        android:letterSpacing="0.1"
+        android:layout_marginBottom="16dp"
+        android:alpha="0" />
+
+    <!-- Tagline -->
+    <TextView
+        android:id="@+id/tagline_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Get to the point!"
+        android:textSize="24sp"
+        android:textStyle="italic"
+        android:textColor="@color/accentColorLight"
+        android:layout_marginBottom="8dp"
+        android:alpha="0" />
+
+    <!-- Subtitle -->
+    <TextView
+        android:id="@+id/subtitle_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Transform conversations through awareness"
+        android:textSize="16sp"
+        android:textColor="@color/whiteTextColor"
+        android:gravity="center"
+        android:layout_marginBottom="64dp"
+        android:alpha="0" />
+
+    <!-- Loading Animation Area -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginBottom="24dp">
+
+        <!-- Animated Dots -->
+        <TextView
+            android:id="@+id/dot1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="⚫"
+            android:textSize="20sp"
+            android:textColor="@color/whiteTextColor"
+            android:layout_marginEnd="8dp"
+            android:alpha="0" />
+
+        <TextView
+            android:id="@+id/dot2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="⚫"
+            android:textSize="20sp"
+            android:textColor="@color/whiteTextColor"
+            android:layout_marginEnd="8dp"
+            android:alpha="0" />
+
+        <TextView
+            android:id="@+id/dot3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="⚫"
+            android:textSize="20sp"
+            android:textColor="@color/whiteTextColor"
+            android:alpha="0" />
+
+    </LinearLayout>
+
+    <!-- Loading Text -->
+    <TextView
+        android:id="@+id/loading_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Initializing call tracking..."
+        android:textSize="14sp"
+        android:textColor="@color/whiteTextColor"
+        android:alpha="0" />
+
+    <!-- Version Info -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Version 0.0.2"
+        android:textSize="12sp"
+        android:textColor="@color/whiteTextColor"
+        android:layout_marginTop="32dp"
+        android:alpha="0.7" />
+
+</LinearLayout>

@@ -7,6 +7,7 @@
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.READ_PHONE_NUMBERS" />
     <uses-permission android:name="android.permission.READ_CALL_LOG" />
+    <uses-permission android:name="android.permission.CALL_PHONE" />
 
     <application
         android:allowBackup="true"
@@ -19,16 +20,24 @@
         android:theme="@style/Theme.DialLog002"
         tools:targetApi="31">
         <activity
-            android:name=".MainActivity"
+            android:name=".SplashActivity"
             android:exported="true"
-            android:theme="@style/Theme.DialLog002">
+            android:theme="@style/Theme.Splash"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".MainActivity"
+            android:exported="false"
+            android:theme="@style/Theme.DialLog002" />
         <activity android:name=".ContactSelectionActivity" />
         <activity android:name=".CallHistoryActivity" />
+        <activity android:name=".AnalyticsActivity" />
+        <activity android:name=".FavoritesActivity" />
+        <activity android:name=".CommunicationStyleActivity" />
     </application>
 </manifest>

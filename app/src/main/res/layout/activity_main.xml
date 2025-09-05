@@ -1,114 +1,174 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp">
-
-    <TextView
-        android:id="@+id/status_text"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Ready to track calls"
-        android:textSize="16sp"
-        android:gravity="center"
-        android:layout_marginBottom="16dp" />
-
-    <TextView
-        android:id="@+id/current_call_text"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="No active tracking"
-        android:textSize="14sp"
-        android:gravity="center"
-        android:layout_marginBottom="16dp" />
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center"
-        android:layout_marginBottom="16dp">
+        android:orientation="vertical"
+        android:padding="16dp">
 
-        <Button
-            android:id="@+id/select_contact_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Start Tracking"
-            android:layout_marginEnd="16dp" />
-
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fabStartCall"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:contentDescription="Start/Stop"
-            android:src="@android:drawable/ic_media_play" />
-
-    </LinearLayout>
-
-    <!-- Test Call Logging Button -->
-    <Button
-        android:id="@+id/test_call_logging_button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Test Call Logging (Create Sample Log)"
-        android:layout_marginBottom="16dp" />
-
-    <!-- Search Bar -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginBottom="8dp">
-
-        <EditText
-            android:id="@+id/search_edit_text"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:hint="Search contacts..."
-            android:inputType="text"
-            android:padding="12dp"
-            android:background="@android:drawable/editbox_background"
-            android:layout_marginEnd="8dp" />
-
-        <Button
-            android:id="@+id/clear_search_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Clear"
-            android:textSize="12sp" />
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:layout_marginBottom="8dp">
-
+        <!-- Header Section -->
         <TextView
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Contacts (tap star to add to favorites)"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+            android:text="📱 DialLog - Auto Call Tracker"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:layout_marginBottom="8dp"
+            android:textColor="@color/primaryColor" />
 
-        <Button
-            android:id="@+id/view_history_button"
-            android:layout_width="wrap_content"
+        <!-- Status Display -->
+        <TextView
+            android:id="@+id/status_text"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="View History"
-            android:textSize="12sp" />
+            android:text="📱 No favorites selected - Add contacts to start auto-tracking"
+            android:textSize="16sp"
+            android:gravity="center"
+            android:padding="16dp"
+            android:background="@drawable/status_background"
+            android:layout_marginBottom="24dp" />
+
+        <!-- Main Action Buttons -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginBottom="16dp">
+
+            <Button
+                android:id="@+id/manage_favorites_button"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_weight="1"
+                android:text="⭐ Manage Favorites"
+                android:textSize="16sp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/primary_button_background" />
+
+            <Button
+                android:id="@+id/view_analytics_button"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_weight="1"
+                android:text="📊 Analytics"
+                android:textSize="16sp"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/secondary_button_background" />
+
+        </LinearLayout>
+
+        <!-- Secondary Actions -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginBottom="24dp">
+
+            <Button
+                android:id="@+id/view_history_button"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:text="📞 Call History"
+                android:textSize="14sp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/tertiary_button_background" />
+
+            <Button
+                android:id="@+id/test_call_logging_button"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:text="🧪 Test Log"
+                android:textSize="14sp"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/tertiary_button_background" />
+
+        </LinearLayout>
+
+        <!-- Favorites Section -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="🎯 Auto-Tracked Favorites"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/primaryColor" />
+
+            <TextView
+                android:id="@+id/favorites_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0 contacts"
+                android:textSize="14sp"
+                android:textColor="@color/secondaryTextColor" />
+
+        </LinearLayout>
+
+        <!-- Favorites RecyclerView -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/favorites_recycler"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:nestedScrollingEnabled="false"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Empty State for Favorites -->
+        <TextView
+            android:id="@+id/empty_favorites_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="No favorite contacts yet.\n\nTap 'Manage Favorites' above to add contacts for automatic call tracking."
+            android:textSize="16sp"
+            android:gravity="center"
+            android:padding="32dp"
+            android:textColor="@color/secondaryTextColor"
+            android:background="@drawable/empty_state_background"
+            android:visibility="gone" />
+
+        <!-- Info Section -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:background="@drawable/info_background"
+            android:layout_marginTop="16dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="ℹ️ How it works:"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp"
+                android:textColor="@color/primaryColor" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="• Add contacts to favorites for automatic tracking\n• When favorite contacts call, DialLog automatically records talk/listen times\n• View detailed analytics and call history anytime\n• All data stays private on your device"
+                android:textSize="14sp"
+                android:lineSpacingMultiplier="1.2"
+                android:textColor="@color/secondaryTextColor" />
+
+        </LinearLayout>
 
     </LinearLayout>
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerView"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
-
-</LinearLayout>
+</ScrollView>

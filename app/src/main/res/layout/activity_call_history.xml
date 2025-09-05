@@ -5,27 +5,157 @@
     android:orientation="vertical"
     android:padding="16dp">
 
+    <!-- Header -->
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Call History"
+        android:text="📞 Call History"
         android:textSize="24sp"
         android:textStyle="bold"
         android:gravity="center"
-        android:layout_marginBottom="16dp" />
+        android:layout_marginBottom="8dp"
+        android:textColor="@color/primaryColor" />
 
+    <!-- Description -->
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Most Recent Call per Contact"
+        android:text="Tracked calls from favorite contacts"
         android:textSize="16sp"
         android:gravity="center"
-        android:layout_marginBottom="16dp" />
+        android:layout_marginBottom="16dp"
+        android:textColor="@color/secondaryTextColor" />
 
+    <!-- Action Buttons -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginBottom="16dp">
+
+        <Button
+            android:id="@+id/analytics_button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="📊 View Analytics"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/primary_button_background" />
+
+        <Button
+            android:id="@+id/filter_button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="🔍 Filter"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/secondary_button_background" />
+
+    </LinearLayout>
+
+    <!-- Quick Stats Card -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="@drawable/quick_stats_background"
+        android:padding="16dp"
+        android:layout_marginBottom="16dp">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/total_calls_stat"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="@color/primaryColor" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Total Calls"
+                android:textSize="12sp"
+                android:textColor="@color/secondaryTextColor" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/total_duration_stat"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0min"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="@color/primaryColor" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Total Time"
+                android:textSize="12sp"
+                android:textColor="@color/secondaryTextColor" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/avg_ratio_stat"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0%"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="@color/accentColor" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Avg Talk"
+                android:textSize="12sp"
+                android:textColor="@color/secondaryTextColor" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Call History List Header -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="📋 Recent Calls by Contact"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp"
+        android:textColor="@color/primaryColor" />
+
+    <!-- Call History RecyclerView -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/call_history_recycler"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1" />
+        android:layout_weight="1"
+        android:background="@drawable/history_list_background" />
 
 </LinearLayout>

@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="@drawable/analytics_item_background"
+    android:layout_marginBottom="8dp"
+    android:clickable="true"
+    android:focusable="true">
+
+    <!-- Header with contact name and call count -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="12dp">
+
+        <TextView
+            android:id="@+id/contact_name_text"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Contact Name"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/primaryTextColor" />
+
+        <TextView
+            android:id="@+id/call_count_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="5 calls"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="@color/accentColor"
+            android:background="@drawable/call_count_background"
+            android:padding="6dp" />
+
+    </LinearLayout>
+
+    <!-- Stats Grid -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <!-- Duration Column -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/duration_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="15m 30s"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@color/primaryColor" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Total Duration"
+                android:textSize="12sp"
+                android:textColor="@color/secondaryTextColor" />
+
+        </LinearLayout>
+
+        <!-- Ratio Column -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.5"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/ratio_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="65% talk / 35% listen"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="@color/accentColor"
+                android:gravity="center" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Talk/Listen Ratio"
+                android:textSize="12sp"
+                android:textColor="@color/secondaryTextColor" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Tap for more info indicator -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="📱 Tap for detailed analytics"
+        android:textSize="12sp"
+        android:gravity="center"
+        android:textColor="@color/secondaryTextColor"
+        android:layout_marginTop="8dp"
+        android:textStyle="italic" />
+
+</LinearLayout>

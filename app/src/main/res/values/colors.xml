@@ -4,4 +4,52 @@
     <color name="colorPrimary">#6200EE</color>
     <color name="colorPrimaryDark">#3700B3</color>
     <color name="colorAccent">#03DAC5</color>
-    </resources>
+    
+    <!-- DialLog App Theme Colors -->
+    <color name="primaryColor">#2196F3</color>         <!-- Blue -->
+    <color name="primaryColorDark">#1976D2</color>    <!-- Darker Blue -->
+    <color name="primaryColorLight">#BBDEFB</color>   <!-- Light Blue -->
+    
+    <color name="accentColor">#FF5722</color>         <!-- Orange accent -->
+    <color name="accentColorLight">#FFCCBC</color>   <!-- Light Orange -->
+    
+    <!-- Text Colors -->
+    <color name="primaryTextColor">#212121</color>    <!-- Dark Gray -->
+    <color name="secondaryTextColor">#757575</color>  <!-- Medium Gray -->
+    <color name="disabledTextColor">#BDBDBD</color>   <!-- Light Gray -->
+    <color name="whiteTextColor">#FFFFFF</color>      <!-- White -->
+    
+    <!-- Background Colors -->
+    <color name="backgroundColor">#FAFAFA</color>     <!-- Very Light Gray -->
+    <color name="surfaceColor">#FFFFFF</color>        <!-- White -->
+    <color name="cardBackgroundColor">#FFFFFF</color> <!-- White -->
+    <color name="dividerColor">#E0E0E0</color>        <!-- Light Gray -->
+    
+    <!-- Status Colors -->
+    <color name="successColor">#4CAF50</color>        <!-- Green -->
+    <color name="warningColor">#FF9800</color>        <!-- Orange -->
+    <color name="errorColor">#F44336</color>          <!-- Red -->
+    <color name="infoColor">#2196F3</color>           <!-- Blue -->
+    
+    <!-- Favorites Theme -->
+    <color name="favoriteColor">#FFD700</color>       <!-- Gold -->
+    <color name="favoriteBackgroundColor">#FFF8E1</color> <!-- Light Yellow -->
+    
+    <!-- Call Analytics Colors -->
+    <color name="speakingColor">#FF5722</color>       <!-- Orange -->
+    <color name="listeningColor">#2196F3</color>      <!-- Blue -->
+    <color name="silenceColor">#9E9E9E</color>        <!-- Gray -->
+    
+    <!-- Button Colors -->
+    <color name="primaryButtonColor">#2196F3</color>    <!-- Blue -->
+    <color name="secondaryButtonColor">#757575</color> <!-- Gray -->
+    <color name="tertiaryButtonColor">#E0E0E0</color>  <!-- Light Gray -->
+    
+    <!-- Background overlays -->
+    <color name="overlay_light">#08000000</color>     <!-- 3% black -->
+    <color name="overlay_medium">#20000000</color>    <!-- 12% black -->
+    <color name="overlay_dark">#60000000</color>      <!-- 38% black -->
+    
+    <!-- Transparent -->
+    <color name="transparent">#00000000</color>
+</resources>

@@ -16,7 +16,7 @@ class Converters {
 	fun dateToTimestamp(date: Date?): Long? = date?.time
 }
 
-@Database(entities = [CallLog::class], version = 1, exportSchema = false)
+@Database(entities = [CallLog::class], version = 2, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
 	abstract fun callLogDao(): CallLogDao
@@ -25,13 +25,17 @@ abstract class AppDatabase : RoomDatabase() {
 		@Volatile
 		private var INSTANCE: AppDatabase? = null
 
-		fun getDatabase(context: Context): AppDatabase = INSTANCE ?: synchronized(this) {
+		// Use getInstance for consistency with CallAnalyticsService
+		fun getInstance(context: Context): AppDatabase = INSTANCE ?: synchronized(this) {
 			INSTANCE ?: Room.databaseBuilder(
 				context.applicationContext,
 				AppDatabase::class.java,
 				"diallog.db"
 			).fallbackToDestructiveMigration().build().also { INSTANCE = it }
 		}
+		
+		// Keep the old method for backward compatibility
+		fun getDatabase(context: Context): AppDatabase = getInstance(context)
 	}
 }
 

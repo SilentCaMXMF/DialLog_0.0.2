@@ -24,30 +24,63 @@ class CallStateMonitor(
         
         phoneStateListener = object : PhoneStateListener() {
             override fun onCallStateChanged(state: Int, phoneNumber: String?) {
+                Log.d("CallStateMonitor", "=== CALL STATE CHANGED ===")
+                Log.d("CallStateMonitor", "Raw state: $state")
+                Log.d("CallStateMonitor", "Phone number: $phoneNumber")
+                Log.d("CallStateMonitor", "Current call number: $currentCallNumber")
+                Log.d("CallStateMonitor", "Is call active: $isCallActive")
+                
                 val callState = when (state) {
                     TelephonyManager.CALL_STATE_IDLE -> {
+                        Log.d("CallStateMonitor", "State: IDLE")
                         if (isCallActive) {
-                            Log.d("CallStateMonitor", "Call ended")
+                            Log.d("CallStateMonitor", "Call ended - was active")
                             isCallActive = false
+                            val endingCallNumber = currentCallNumber
                             currentCallNumber = null
+                            Log.d("CallStateMonitor", "Ending call from: $endingCallNumber")
+                        } else {
+                            Log.d("CallStateMonitor", "State IDLE - no active call")
                         }
                         CallState.IDLE
                     }
                     TelephonyManager.CALL_STATE_RINGING -> {
-                        Log.d("CallStateMonitor", "Call ringing from: $phoneNumber")
+                        Log.d("CallStateMonitor", "State: RINGING from $phoneNumber")
                         currentCallNumber = phoneNumber
+                        
+                        // Check if it's a favorite contact
+                        val isFavorite = isCallFromFavoriteContact(phoneNumber)
+                        Log.d("CallStateMonitor", "Is favorite contact: $isFavorite")
+                        
                         CallState.RINGING
                     }
                     TelephonyManager.CALL_STATE_OFFHOOK -> {
-                        Log.d("CallStateMonitor", "Call answered from: $phoneNumber")
+                        Log.d("CallStateMonitor", "State: OFFHOOK (call answered/outgoing)")
+                        Log.d("CallStateMonitor", "Phone number from parameter: $phoneNumber")
+                        Log.d("CallStateMonitor", "Using current call number: $currentCallNumber")
+                        
                         isCallActive = true
-                        currentCallNumber = phoneNumber
+                        // Use current call number if phone number parameter is null
+                        val activeCallNumber = phoneNumber ?: currentCallNumber
+                        currentCallNumber = activeCallNumber
+                        
+                        Log.d("CallStateMonitor", "Active call number set to: $activeCallNumber")
+                        
+                        // Check if it's a favorite contact
+                        val isFavorite = isCallFromFavoriteContact(activeCallNumber)
+                        Log.d("CallStateMonitor", "Is favorite contact: $isFavorite")
+                        
                         CallState.OFFHOOK
                     }
-                    else -> CallState.IDLE
+                    else -> {
+                        Log.d("CallStateMonitor", "Unknown state: $state")
+                        CallState.IDLE
+                    }
                 }
                 
+                Log.d("CallStateMonitor", "Calling onCallStateChanged with: $callState, $currentCallNumber")
                 onCallStateChanged(callState, currentCallNumber)
+                Log.d("CallStateMonitor", "=== END CALL STATE CHANGE ===")
             }
         }
         
@@ -65,14 +98,33 @@ class CallStateMonitor(
     }
     
     fun isCallFromFavoriteContact(phoneNumber: String?): Boolean {
-        if (phoneNumber == null) return false
+        if (phoneNumber == null) {
+            Log.d("CallStateMonitor", "isCallFromFavoriteContact: phoneNumber is null")
+            return false
+        }
+        
+        Log.d("CallStateMonitor", "isCallFromFavoriteContact: Checking if $phoneNumber is a favorite")
         
         val favoriteContactIds = ContactManager.getFavoriteContactIds(context)
-        val contacts = ContactManager.loadContacts(context)
+        Log.d("CallStateMonitor", "isCallFromFavoriteContact: Found ${favoriteContactIds.size} favorite IDs")
         
-        return contacts.any { contact ->
-            contact.phoneNumber.replace("\\s".toRegex(), "") == phoneNumber.replace("\\s".toRegex(), "") &&
-            favoriteContactIds.contains(contact.id)
+        // Optimize by only loading favorite contacts, not all contacts
+        val favoriteContacts = ContactManager.getFavoriteContacts(context)
+        Log.d("CallStateMonitor", "isCallFromFavoriteContact: Loaded ${favoriteContacts.size} favorite contacts")
+        
+        val cleanPhoneNumber = phoneNumber.replace("\\s".toRegex(), "")
+        Log.d("CallStateMonitor", "isCallFromFavoriteContact: Clean phone number: $cleanPhoneNumber")
+        
+        val isFavorite = favoriteContacts.any { contact ->
+            val cleanContactNumber = contact.phoneNumber.replace("\\s".toRegex(), "")
+            val matches = cleanContactNumber == cleanPhoneNumber
+            if (matches) {
+                Log.d("CallStateMonitor", "isCallFromFavoriteContact: MATCH found with ${contact.name} (${contact.phoneNumber})")
+            }
+            matches
         }
+        
+        Log.d("CallStateMonitor", "isCallFromFavoriteContact: Result = $isFavorite")
+        return isFavorite
     }
 }

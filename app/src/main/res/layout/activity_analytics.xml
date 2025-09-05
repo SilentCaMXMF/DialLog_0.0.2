@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Header -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="📊 Call Analytics"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:layout_marginBottom="24dp"
+            android:textColor="@color/primaryColor" />
+
+        <!-- Control Panel -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/control_panel_background"
+            android:padding="16dp"
+            android:layout_marginBottom="24dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="🎛️ Analysis Settings"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="16dp"
+                android:textColor="@color/primaryColor" />
+
+            <!-- Time Range Selection -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="12dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Time Range:"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <Spinner
+                    android:id="@+id/time_range_spinner"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1.5" />
+
+            </LinearLayout>
+
+            <!-- Contact Selection -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="12dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Contact:"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <Spinner
+                    android:id="@+id/contact_spinner"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1.5" />
+
+            </LinearLayout>
+
+            <!-- Date Picker -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="16dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Date:"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <Button
+                    android:id="@+id/date_picker_button"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1.5"
+                    android:text="Select Date"
+                    android:textSize="14sp"
+                    android:background="@drawable/date_picker_background" />
+
+            </LinearLayout>
+
+            <!-- Generate Analytics Button -->
+            <Button
+                android:id="@+id/generate_analytics_button"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="📈 Generate Analytics"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:background="@drawable/generate_button_background" />
+
+        </LinearLayout>
+
+        <!-- Analytics Results Container -->
+        <LinearLayout
+            android:id="@+id/analytics_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <!-- Summary Card -->
+            <LinearLayout
+                android:id="@+id/summary_card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/summary_card_background"
+                android:padding="20dp"
+                android:layout_marginBottom="24dp">
+
+                <TextView
+                    android:id="@+id/period_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Analysis Period"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:layout_marginBottom="16dp"
+                    android:textColor="@color/primaryColor" />
+
+                <!-- Stats Grid -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <!-- Left Column -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:layout_marginEnd="8dp">
+
+                        <TextView
+                            android:id="@+id/total_calls_text"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0 calls"
+                            android:textSize="24sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/primaryColor" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Total Calls"
+                            android:textSize="12sp"
+                            android:textColor="@color/secondaryTextColor" />
+
+                    </LinearLayout>
+
+                    <!-- Right Column -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:layout_marginStart="8dp">
+
+                        <TextView
+                            android:id="@+id/total_duration_text"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0min"
+                            android:textSize="24sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/primaryColor" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Total Duration"
+                            android:textSize="12sp"
+                            android:textColor="@color/secondaryTextColor" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <!-- Talk/Listen Ratio -->
+                <TextView
+                    android:id="@+id/talk_listen_ratio_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="0.0% talk / 0.0% listen"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="8dp"
+                    android:textColor="@color/accentColor" />
+
+                <!-- Average Call Duration -->
+                <TextView
+                    android:id="@+id/average_call_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Avg: 0min"
+                    android:textSize="14sp"
+                    android:gravity="center"
+                    android:textColor="@color/secondaryTextColor" />
+
+            </LinearLayout>
+
+            <!-- Detailed Results Header -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="📋 Detailed Breakdown"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="12dp"
+                android:textColor="@color/primaryColor" />
+
+            <!-- Contact Analytics RecyclerView -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/contact_analytics_recycler"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false"
+                android:background="@drawable/results_background" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</ScrollView>

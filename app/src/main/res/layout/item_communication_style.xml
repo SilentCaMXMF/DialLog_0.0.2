@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/style_card"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:layout_margin="4dp"
+    android:background="@drawable/style_card_background"
+    android:clickable="true"
+    android:focusable="true">
+
+    <!-- Emoji -->
+    <TextView
+        android:id="@+id/style_emoji"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="🗣️"
+        android:textSize="32sp"
+        android:gravity="center"
+        android:layout_marginBottom="8dp" />
+
+    <!-- Category Name -->
+    <TextView
+        android:id="@+id/style_category"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Assertive"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:layout_marginBottom="4dp"
+        android:textColor="@color/primaryTextColor" />
+
+    <!-- Range -->
+    <TextView
+        android:id="@+id/style_range"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="60-69% talking"
+        android:textSize="11sp"
+        android:gravity="center"
+        android:layout_marginBottom="8dp"
+        android:textColor="@color/secondaryTextColor" />
+
+    <!-- Description -->
+    <TextView
+        android:id="@+id/style_description"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Confident and balanced communication"
+        android:textSize="11sp"
+        android:gravity="center"
+        android:maxLines="2"
+        android:ellipsize="end"
+        android:lineSpacingMultiplier="1.1"
+        android:textColor="@color/secondaryTextColor" />
+
+    <!-- Tap hint -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Tap for details"
+        android:textSize="9sp"
+        android:gravity="center"
+        android:layout_marginTop="4dp"
+        android:textStyle="italic"
+        android:textColor="@color/disabledTextColor" />
+
+</LinearLayout>

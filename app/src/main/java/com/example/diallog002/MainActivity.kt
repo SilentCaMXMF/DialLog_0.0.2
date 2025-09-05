@@ -3,6 +3,8 @@ package com.example.diallog002
 import android.Manifest
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -21,20 +23,18 @@ import kotlinx.coroutines.*
 import java.util.*
 
 class MainActivity : AppCompatActivity() {
-    private lateinit var recyclerView: RecyclerView
-    private lateinit var adapter: ContactsAdapter
-    private lateinit var startStopButton: Button
-    private lateinit var playButton: FloatingActionButton
+    private lateinit var favoritesRecyclerView: RecyclerView
+    private lateinit var mainFavoritesAdapter: MainFavoritesAdapter
     private lateinit var statusTextView: TextView
-    private lateinit var currentCallTextView: TextView
-    private lateinit var searchEditText: EditText
-    private lateinit var clearSearchButton: Button
+    private lateinit var manageFavoritesButton: Button
     private lateinit var viewHistoryButton: Button
+    private lateinit var viewAnalyticsButton: Button
+    private lateinit var favoritesCountText: TextView
+    private lateinit var emptyFavoritesText: TextView
     
     private lateinit var callStateMonitor: CallStateMonitor
     private lateinit var callTracker: CallTracker
-    private var contacts = mutableListOf<Contact>()
-    private var allContacts = mutableListOf<Contact>() // Keep original list for search
+    private var favoriteContacts = mutableListOf<Contact>()
     
     private val coroutineScope = CoroutineScope(Dispatchers.Main + Job())
     
@@ -44,10 +44,13 @@ class MainActivity : AppCompatActivity() {
         val allGranted = permissions.values.all { it }
         if (allGranted) {
             Log.d("MainActivity", "All permissions granted")
-            loadContacts()
+            loadFavoriteContacts()
             startCallMonitoring()
         } else {
             Log.e("MainActivity", "Some permissions were denied")
+            updateStatus("⚠️ Permissions required for call tracking")
+            // Still try to load favorites since READ_CONTACTS might be granted
+            tryLoadFavorites()
         }
     }
     
@@ -57,7 +60,6 @@ class MainActivity : AppCompatActivity() {
         
         initializeCallTracking()
         initializeViews()
-        setupSearchFunctionality()
         requestPermissions()
     }
     
@@ -72,51 +74,36 @@ class MainActivity : AppCompatActivity() {
     }
     
     private fun initializeViews() {
-        recyclerView = findViewById(R.id.recyclerView)
-        startStopButton = findViewById(R.id.select_contact_button)
-        playButton = findViewById(R.id.fabStartCall)
+        favoritesRecyclerView = findViewById(R.id.favorites_recycler)
         statusTextView = findViewById(R.id.status_text)
-        currentCallTextView = findViewById(R.id.current_call_text)
-        searchEditText = findViewById(R.id.search_edit_text)
-        clearSearchButton = findViewById(R.id.clear_search_button)
+        manageFavoritesButton = findViewById(R.id.manage_favorites_button)
         viewHistoryButton = findViewById(R.id.view_history_button)
+        viewAnalyticsButton = findViewById(R.id.view_analytics_button)
+        favoritesCountText = findViewById(R.id.favorites_count)
+        emptyFavoritesText = findViewById(R.id.empty_favorites_text)
         
-        // Set up Contacts RecyclerView
-        recyclerView.layoutManager = LinearLayoutManager(this)
-        adapter = ContactsAdapter(
-            contacts = contacts,
-            onContactClick = { contact: Contact ->
-                // Handle contact click - could show call history
-                Log.d("MainActivity", "Contact clicked: ${contact.name}")
+        // Set up Favorites RecyclerView - showing current auto-tracked contacts
+        favoritesRecyclerView.layoutManager = LinearLayoutManager(this)
+        mainFavoritesAdapter = MainFavoritesAdapter(
+            onFavoriteClick = { contact ->
+                // Show options for this favorite contact (view history, analytics, etc.)
+                Log.d("MainActivity", "Favorite contact options: ${contact.name}")
+                showFavoriteContactOptions(contact)
             },
-            onFavoriteToggle = { contact: Contact ->
-                toggleFavorite(contact)
+            onCallClick = { contact ->
+                // Direct call to this favorite contact
+                Log.d("MainActivity", "Calling favorite contact: ${contact.name}")
+                callFavoriteContact(contact)
             }
         )
-        recyclerView.adapter = adapter
+        favoritesRecyclerView.adapter = mainFavoritesAdapter
+        Log.d("MainActivity", "Main favorites adapter set with ${favoriteContacts.size} contacts")
         
         // Set up button click listeners
-        startStopButton.setOnClickListener {
-            if (callTracker.isCurrentlyTracking()) {
-                stopCallTracking()
-            } else {
-                // Show contact selection dialog
-                showContactSelectionDialog()
-            }
-        }
-        
-        playButton.setOnClickListener {
-            if (callTracker.isCurrentlyTracking()) {
-                stopCallTracking()
-            } else {
-                // Show contact selection dialog
-                showContactSelectionDialog()
-            }
-        }
-        
-        clearSearchButton.setOnClickListener {
-            searchEditText.text.clear()
-            filterContacts("")
+        manageFavoritesButton.setOnClickListener {
+            // Navigate to FavoritesActivity to manage favorites
+            val intent = Intent(this, FavoritesActivity::class.java)
+            startActivity(intent)
         }
         
         viewHistoryButton.setOnClickListener {
@@ -125,37 +112,27 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
         }
         
-        // Test call logging button
-        findViewById<Button>(R.id.test_call_logging_button).setOnClickListener {
-            testCallLogging()
+        viewAnalyticsButton.setOnClickListener {
+            // Navigate to AnalyticsActivity
+            val intent = Intent(this, AnalyticsActivity::class.java)
+            startActivity(intent)
         }
         
-        updateUI()
-    }
-    
-    private fun setupSearchFunctionality() {
-        searchEditText.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-            override fun afterTextChanged(s: Editable?) {
-                filterContacts(s.toString())
-            }
-        })
-    }
-    
-    private fun filterContacts(query: String) {
-        if (query.isEmpty()) {
-            contacts.clear()
-            contacts.addAll(allContacts)
-        } else {
-            contacts.clear()
-            contacts.addAll(allContacts.filter { contact ->
-                contact.name.contains(query, ignoreCase = true) ||
-                contact.phoneNumber.contains(query, ignoreCase = true)
-            })
+        // Add long click listener for communication styles guide
+        viewAnalyticsButton.setOnLongClickListener {
+            val intent = Intent(this, CommunicationStyleActivity::class.java)
+            startActivity(intent)
+            true
         }
-        adapter.updateContacts(contacts)
+        
+        // Test call logging button (keep for development)
+        findViewById<Button>(R.id.test_call_logging_button).setOnClickListener {
+            testFavorites() // Changed to test favorites instead
+        }
+        
+        updateStatusDisplay()
     }
+    
     
     private fun requestPermissions() {
         val permissions = arrayOf(
@@ -164,91 +141,302 @@ class MainActivity : AppCompatActivity() {
             Manifest.permission.READ_CONTACTS,
             Manifest.permission.READ_PHONE_STATE,
             Manifest.permission.READ_PHONE_NUMBERS,
-            Manifest.permission.READ_CALL_LOG
+            Manifest.permission.READ_CALL_LOG,
+            Manifest.permission.CALL_PHONE
         )
+        
+        // Check if READ_CONTACTS is already granted
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            // If contacts permission is already granted, load favorites immediately
+            loadFavoriteContacts()
+        }
         
         requestPermissionLauncher.launch(permissions)
     }
     
-    private fun loadContacts() {
-        coroutineScope.launch {
+    private fun tryLoadFavorites() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            loadFavoriteContacts()
+        }
+    }
+    
+    private fun loadFavoriteContacts() {
+        Log.d("MainActivity", "loadFavoriteContacts: Starting to load favorites")
+        coroutineScope.launch(Dispatchers.Main) {
             try {
-                allContacts = ContactManager.loadContacts(this@MainActivity).toMutableList()
-                contacts.clear()
-                contacts.addAll(allContacts)
-                adapter.updateContacts(contacts)
-                Log.d("MainActivity", "Loaded ${contacts.size} contacts")
+                val allContacts = ContactManager.loadContacts(this@MainActivity)
+                Log.d("MainActivity", "loadFavoriteContacts: Loaded ${allContacts.size} total contacts")
+                
+                val favoriteIds = ContactManager.getFavoriteContactIds(this@MainActivity)
+                Log.d("MainActivity", "loadFavoriteContacts: Found ${favoriteIds.size} favorite IDs: $favoriteIds")
+                
+                favoriteContacts.clear()
+                favoriteContacts.addAll(allContacts.filter { it.isFavorite })
+                
+                Log.d("MainActivity", "loadFavoriteContacts: Filtered ${favoriteContacts.size} favorite contacts")
+                favoriteContacts.forEach { contact ->
+                    Log.d("MainActivity", "loadFavoriteContacts: Favorite contact: ${contact.name} (${contact.id}) - ${contact.phoneNumber}")
+                }
+                
+                mainFavoritesAdapter.updateFavorites(favoriteContacts)
+                
+                // Update favorites count display
+                favoritesCountText.text = "${favoriteContacts.size} contacts"
+                
+                // Handle empty state visibility
+                if (favoriteContacts.isEmpty()) {
+                    favoritesRecyclerView.visibility = android.view.View.GONE
+                    emptyFavoritesText.visibility = android.view.View.VISIBLE
+                    Log.d("MainActivity", "loadFavoriteContacts: Showing empty state")
+                } else {
+                    favoritesRecyclerView.visibility = android.view.View.VISIBLE
+                    emptyFavoritesText.visibility = android.view.View.GONE
+                    Log.d("MainActivity", "loadFavoriteContacts: Showing ${favoriteContacts.size} favorites in RecyclerView")
+                }
+                
+                val statusMessage = if (favoriteContacts.isEmpty()) {
+                    "📱 No favorite contacts. Add favorites to start automatic call tracking."
+                } else {
+                    "🎯 Auto-tracking ${favoriteContacts.size} favorite contacts"
+                }
+                updateStatus(statusMessage)
+                
+                Log.d("MainActivity", "loadFavoriteContacts: Completed loading ${favoriteContacts.size} favorite contacts for auto-tracking")
             } catch (e: Exception) {
-                Log.e("MainActivity", "Error loading contacts", e)
+                Log.e("MainActivity", "Error loading favorite contacts", e)
+                updateStatus("Error loading contacts: ${e.message}")
             }
         }
     }
     
     private fun startCallMonitoring() {
-        callStateMonitor.startListening()
-        Log.d("MainActivity", "Started call monitoring")
+        Log.d("MainActivity", "startCallMonitoring: Starting call state monitoring")
+        try {
+            callStateMonitor.startListening()
+            Log.d("MainActivity", "startCallMonitoring: Successfully started call monitoring")
+        } catch (e: Exception) {
+            Log.e("MainActivity", "startCallMonitoring: Error starting call monitoring", e)
+        }
     }
     
     private fun handleCallStateChange(callState: CallStateMonitor.CallState, phoneNumber: String?) {
+        Log.d("MainActivity", "=== HANDLE CALL STATE CHANGE ===")
+        Log.d("MainActivity", "Call state: $callState")
+        Log.d("MainActivity", "Phone number: $phoneNumber")
+        
         when (callState) {
             CallStateMonitor.CallState.RINGING -> {
-                Log.d("MainActivity", "Call ringing from: $phoneNumber")
-                updateStatus("Incoming call from: $phoneNumber")
+                Log.d("MainActivity", "Processing RINGING state")
+                val contact = findFavoriteContactByPhoneNumber(phoneNumber)
+                if (contact != null) {
+                    Log.d("MainActivity", "✅ Incoming call from FAVORITE: ${contact.name} (${contact.phoneNumber})")
+                    updateStatus("📞 Incoming call from favorite: ${contact.name}")
+                } else {
+                    Log.d("MainActivity", "❌ Incoming call from NON-FAVORITE: $phoneNumber")
+                    updateStatus("📞 Incoming call (not tracked)")
+                }
             }
             CallStateMonitor.CallState.OFFHOOK -> {
-                Log.d("MainActivity", "Call answered from: $phoneNumber")
-                if (phoneNumber != null && callStateMonitor.isCallFromFavoriteContact(phoneNumber)) {
-                    val contact = findContactByPhoneNumber(phoneNumber)
-                    if (contact != null) {
-                        startCallTracking(contact.name, contact.phoneNumber)
-                        updateStatus("Tracking call with: ${contact.name}")
+                Log.d("MainActivity", "Processing OFFHOOK state (call answered/active)")
+                val contact = findFavoriteContactByPhoneNumber(phoneNumber)
+                if (contact != null) {
+                    Log.d("MainActivity", "✅ STARTING TRACKING for favorite: ${contact.name} (${contact.phoneNumber})")
+                    try {
+                        callTracker.startTracking(contact.name, contact.phoneNumber)
+                        updateStatus("🎯 Auto-tracking call with: ${contact.name}")
+                        Log.d("MainActivity", "Call tracking started successfully")
+                    } catch (e: Exception) {
+                        Log.e("MainActivity", "Error starting call tracking", e)
+                        updateStatus("❌ Error starting call tracking")
                     }
                 } else {
-                    updateStatus("Call in progress (not from favorite contact)")
+                    Log.d("MainActivity", "❌ Call with NON-FAVORITE, not tracking: $phoneNumber")
+                    updateStatus("📞 Call in progress (not tracked)")
                 }
             }
             CallStateMonitor.CallState.IDLE -> {
-                Log.d("MainActivity", "Call ended")
+                Log.d("MainActivity", "Processing IDLE state (call ended)")
                 if (callTracker.isCurrentlyTracking()) {
-                    stopCallTracking()
+                    Log.d("MainActivity", "✅ STOPPING call tracking - call was being tracked")
+                    try {
+                        callTracker.stopTracking()
+                        updateStatus("✅ Call tracked and saved")
+                        Log.d("MainActivity", "Call tracking stopped successfully")
+                        // Refresh to show updated counts
+                        Handler(Looper.getMainLooper()).postDelayed({
+                            loadFavoriteContacts()
+                        }, 1000)
+                    } catch (e: Exception) {
+                        Log.e("MainActivity", "Error stopping call tracking", e)
+                        updateStatus("❌ Error saving call data")
+                    }
+                } else {
+                    Log.d("MainActivity", "❌ No call was being tracked")
+                    updateStatus("📱 Ready for next call")
                 }
-                updateStatus("No active call")
             }
         }
+        Log.d("MainActivity", "=== END HANDLE CALL STATE CHANGE ===")
     }
     
-    private fun findContactByPhoneNumber(phoneNumber: String): Contact? {
-        return contacts.find { contact ->
-            contact.phoneNumber.replace("\\s".toRegex(), "") == 
-            phoneNumber.replace("\\s".toRegex(), "")
+    private fun findFavoriteContactByPhoneNumber(phoneNumber: String?): Contact? {
+        Log.d("MainActivity", "findFavoriteContactByPhoneNumber: Looking for $phoneNumber")
+        if (phoneNumber == null) {
+            Log.d("MainActivity", "findFavoriteContactByPhoneNumber: phoneNumber is null")
+            return null
+        }
+        
+        Log.d("MainActivity", "findFavoriteContactByPhoneNumber: Searching among ${favoriteContacts.size} favorite contacts")
+        val cleanPhoneNumber = phoneNumber.replace("\\s".toRegex(), "")
+        Log.d("MainActivity", "findFavoriteContactByPhoneNumber: Clean phone number: $cleanPhoneNumber")
+        
+        favoriteContacts.forEach { contact ->
+            val cleanContactNumber = contact.phoneNumber.replace("\\s".toRegex(), "")
+            Log.d("MainActivity", "findFavoriteContactByPhoneNumber: Comparing with ${contact.name}: $cleanContactNumber")
+        }
+        
+        val foundContact = favoriteContacts.find { contact ->
+            contact.phoneNumber.replace("\\s".toRegex(), "") == cleanPhoneNumber
+        }
+        
+        if (foundContact != null) {
+            Log.d("MainActivity", "findFavoriteContactByPhoneNumber: FOUND MATCH: ${foundContact.name}")
+        } else {
+            Log.d("MainActivity", "findFavoriteContactByPhoneNumber: NO MATCH FOUND")
+        }
+        
+        return foundContact
+    }
+    
+    private fun callFavoriteContact(contact: Contact) {
+        Log.d("MainActivity", "callFavoriteContact: Attempting to call ${contact.name} at ${contact.phoneNumber}")
+        
+        // Check if we have CALL_PHONE permission
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            Log.e("MainActivity", "callFavoriteContact: CALL_PHONE permission not granted")
+            updateStatus("⚠️ Phone permission required to make calls")
+            return
+        }
+        
+        try {
+            val phoneNumber = contact.phoneNumber
+            Log.d("MainActivity", "callFavoriteContact: Initiating call to $phoneNumber")
+            
+            val callIntent = Intent(Intent.ACTION_CALL)
+            callIntent.data = android.net.Uri.parse("tel:$phoneNumber")
+            
+            startActivity(callIntent)
+            updateStatus("📞 Calling ${contact.name}...")
+            
+            Log.d("MainActivity", "callFavoriteContact: Call intent started successfully")
+            
+        } catch (e: Exception) {
+            Log.e("MainActivity", "callFavoriteContact: Error making call", e)
+            updateStatus("❌ Error making call to ${contact.name}")
         }
     }
     
-    private fun startCallTracking(contactName: String, phoneNumber: String) {
-        callTracker.startTracking(contactName, phoneNumber)
-        updateUI()
-        updateStatus("Tracking call with: $contactName")
-    }
-    
-    private fun stopCallTracking() {
-        callTracker.stopTracking()
-        updateUI()
-        updateStatus("Call tracking stopped")
-    }
-    
-    private fun toggleFavorite(contact: Contact) {
-        val newFavoriteState = ContactManager.toggleFavorite(this, contact.id)
-        contact.isFavorite = newFavoriteState
-        adapter.updateContacts(contacts)
+    private fun showFavoriteContactOptions(contact: Contact) {
+        // Show options for this favorite contact (view history, analytics, etc.)
+        val options = arrayOf(
+            "View Call History",
+            "View Analytics", 
+            "Remove from Favorites"
+        )
         
-        val message = if (newFavoriteState) "Added to favorites" else "Removed from favorites"
-        updateStatus("${contact.name}: $message")
+        android.app.AlertDialog.Builder(this)
+            .setTitle(contact.name)
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> {
+                        // View call history for this contact
+                        val intent = Intent(this, CallHistoryActivity::class.java)
+                        intent.putExtra("contact_name", contact.name)
+                        startActivity(intent)
+                    }
+                    1 -> {
+                        // View analytics for this contact
+                        val intent = Intent(this, AnalyticsActivity::class.java)
+                        intent.putExtra("contact_name", contact.name)
+                        startActivity(intent)
+                    }
+                    2 -> {
+                        // Remove from favorites
+                        removeFavoriteContact(contact)
+                    }
+                }
+            }
+            .show()
     }
     
-    private fun showContactSelectionDialog() {
-        // For now, just show a simple message
-        // In a real app, you'd show a dialog with contact selection
-        updateStatus("Please select a contact to track manually")
+    private fun removeFavoriteContact(contact: Contact) {
+        android.app.AlertDialog.Builder(this)
+            .setTitle("Remove from Favorites?")
+            .setMessage("Remove ${contact.name} from favorites? Future calls will no longer be tracked automatically.")
+            .setPositiveButton("Remove") { _, _ ->
+                ContactManager.toggleFavorite(this, contact.id)
+                loadFavoriteContacts() // Refresh the list
+                updateStatus("${contact.name} removed from favorites")
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+    
+    private fun testFavorites() {
+        Log.d("MainActivity", "testFavorites: Starting favorites test")
+        
+        // First test basic UI updates
+        favoritesCountText.text = "TEST: 99 contacts"
+        favoritesCountText.setBackgroundColor(android.graphics.Color.YELLOW)
+        
+        // Test by directly adding a hardcoded contact to the adapter
+        val testContact = Contact(
+            id = "test_123",
+            name = "Test Favorite Contact",
+            phoneNumber = "+1234567890",
+            isFavorite = true
+        )
+        
+        Log.d("MainActivity", "testFavorites: Adding hardcoded test contact to adapter")
+        favoriteContacts.clear()
+        favoriteContacts.add(testContact)
+        
+        Log.d("MainActivity", "testFavorites: Calling adapter updateFavorites with ${favoriteContacts.size} contacts")
+        mainFavoritesAdapter.updateFavorites(favoriteContacts)
+        
+        // Force RecyclerView to be visible and try different approaches
+        Log.d("MainActivity", "testFavorites: Making RecyclerView visible")
+        favoritesRecyclerView.visibility = android.view.View.VISIBLE
+        favoritesRecyclerView.setBackgroundColor(android.graphics.Color.RED) // Make it obvious
+        emptyFavoritesText.visibility = android.view.View.GONE
+        
+        // Force refresh
+        mainFavoritesAdapter.notifyDataSetChanged()
+        favoritesRecyclerView.invalidate()
+        favoritesRecyclerView.requestLayout()
+        
+        Log.d("MainActivity", "testFavorites: RecyclerView childCount = ${favoritesRecyclerView.childCount}")
+        Log.d("MainActivity", "testFavorites: RecyclerView adapter itemCount = ${mainFavoritesAdapter.itemCount}")
+        
+        updateStatus("🔧 Test contact added - RecyclerView should be RED")
+        
+        // Also test the SharedPreferences system
+        val currentFavorites = ContactManager.getFavoriteContactIds(this)
+        Log.d("MainActivity", "testFavorites: Current SharedPreferences favorites: $currentFavorites")
+        
+        // Try to add a real contact as favorite if available
+        try {
+            val allContacts = ContactManager.loadContacts(this)
+            if (allContacts.isNotEmpty()) {
+                val firstContact = allContacts.first()
+                Log.d("MainActivity", "testFavorites: Adding real contact as favorite: ${firstContact.name} (${firstContact.id})")
+                ContactManager.toggleFavorite(this, firstContact.id)
+            }
+        } catch (e: Exception) {
+            Log.e("MainActivity", "testFavorites: Error testing with real contacts", e)
+        }
+        
+        Log.d("MainActivity", "testFavorites: Test completed")
     }
     
     private fun testCallLogging() {
@@ -281,7 +469,8 @@ class MainActivity : AppCompatActivity() {
     
     private fun onCallLogUpdated(callLog: CallLog) {
         updateStatus("Call logged: ${callLog.contactName} - Speaking: ${callLog.speakingTime}ms, Listening: ${callLog.listeningTime}ms")
-        updateUI()
+        // Refresh favorites to update counts
+        loadFavoriteContacts()
     }
     
     private fun updateStatus(message: String) {
@@ -289,16 +478,20 @@ class MainActivity : AppCompatActivity() {
         Log.d("MainActivity", message)
     }
     
-    private fun updateUI() {
-        if (callTracker.isCurrentlyTracking()) {
-            startStopButton.text = "Stop Tracking"
-            playButton.setImageResource(android.R.drawable.ic_media_pause)
-            currentCallTextView.text = "Tracking: ${callTracker.getCurrentContactName()}"
+    private fun updateStatusDisplay() {
+        val statusMessage = if (favoriteContacts.isEmpty()) {
+            "📱 No favorites selected - Add contacts to start auto-tracking"
         } else {
-            startStopButton.text = "Start Tracking"
-            playButton.setImageResource(android.R.drawable.ic_media_play)
-            currentCallTextView.text = "No active tracking"
+            "🎯 Auto-tracking enabled for ${favoriteContacts.size} favorite contacts"
         }
+        updateStatus(statusMessage)
+    }
+    
+    override fun onResume() {
+        super.onResume()
+        // Refresh favorites list when returning to this activity
+        Log.d("MainActivity", "onResume: Refreshing favorites list")
+        tryLoadFavorites()
     }
     
     override fun onDestroy() {
