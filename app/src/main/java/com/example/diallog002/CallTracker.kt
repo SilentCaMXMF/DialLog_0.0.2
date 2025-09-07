@@ -1,10 +1,6 @@
 package com.example.diallog002
 
 import android.content.Context
-import android.hardware.Sensor
-import android.hardware.SensorEvent
-import android.hardware.SensorEventListener
-import android.hardware.SensorManager
 import android.media.AudioManager
 import android.media.AudioRecord
 import android.media.MediaRecorder
@@ -17,12 +13,11 @@ import com.example.diallog002.data.CallLog
 import com.example.diallog002.data.CallLogManager
 import kotlinx.coroutines.*
 import kotlin.math.sqrt
-import kotlin.random.Random
 
 class CallTracker(
     private val context: Context,
     private val onCallLogUpdated: (CallLog) -> Unit
-) : SensorEventListener {
+) {
     private var isTracking = false
     private var callStartTime: Long = 0
     private var speakingTime = 0L
@@ -35,22 +30,21 @@ class CallTracker(
     private val handler = Handler(Looper.getMainLooper())
     private val coroutineScope = CoroutineScope(Dispatchers.Main + Job())
     
-    // Sensor-based approach for Android 10+
-    private var sensorManager: SensorManager? = null
-    private var proximitySensor: Sensor? = null
-    private var accelerometer: Sensor? = null
-    private var isNearFace = false
-    private var lastMovementTime = 0L
-    private var speakingPattern = false
-    
-    // Smart timing approach
+    // Audio analysis parameters
     private var trackingRunnable: Runnable? = null
-    private var speechThreshold = 1000.0 // Will be updated from calibration
-    private var backgroundNoise = 100.0 // Will be updated from calibration
+    private val ENVIRONMENT_THRESHOLD_DB = 1.0 // 1 dB above environment
+    private var environmentBaseLevel = 0.0
+    private var speakingThreshold = 0.0
     private var lastAudioLevel = 0.0
     private var consecutiveSilentChecks = 0
-    private val maxSilentChecks = 5 // 500ms of silence before considering it listening
-    private val isAndroid10Plus = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
+    private val maxSilentChecks = 3 // 300ms of silence before switching to listening
+    private val SAMPLE_RATE = 44100
+    private val BUFFER_SIZE = 4096
+    private var audioMonitoringActive = false
+    
+    // Environmental noise calibration
+    private var environmentLevels = mutableListOf<Double>()
+    private var calibrationComplete = false
     
     init {
         // Initialize the database
@@ -58,113 +52,85 @@ class CallTracker(
         
         audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
         
-        // Load calibrated parameters
-        loadCalibrationSettings()
+        // Initialize audio recording for real-time analysis
+        initializeAudioRecord()
         
-        // Initialize sensors for Android 10+ compatibility
-        initializeSensors()
-        
-        if (isAndroid10Plus) {
-            Log.d("CallTracker", "🤖 Android 10+ detected - using sensor-based approach")
-        } else {
-            Log.d("CallTracker", "📱 Pre-Android 10 - attempting microphone approach")
-            initializeAudioRecord()
-        }
+        Log.d("CallTracker", "🎤 Audio-based talk/listen measurement initialized")
+        Log.d("CallTracker", "Environment threshold: +${ENVIRONMENT_THRESHOLD_DB} dB")
     }
     
-    private fun loadCalibrationSettings() {
-        val prefs = context.getSharedPreferences("mic_calibration", Context.MODE_PRIVATE)
+    private fun calibrateEnvironmentLevel() {
+        Log.d("CallTracker", "🔧 Starting environment calibration...")
         
-        if (prefs.getBoolean("calibration_completed", false)) {
-            speechThreshold = prefs.getFloat("speaking_threshold", 1000.0f).toDouble()
-            backgroundNoise = prefs.getFloat("background_noise_level", 100.0f).toDouble()
-            
-            val isSkipped = prefs.getBoolean("calibration_skipped", false)
-            val calibrationTime = prefs.getLong("calibration_timestamp", 0)
-            val calibrationDate = prefs.getString("calibration_date", "Unknown")
-            
-            Log.d("CallTracker", "=== CALIBRATION SETTINGS LOADED ===")
-            Log.d("CallTracker", "  Speech threshold: $speechThreshold")
-            Log.d("CallTracker", "  Background noise: $backgroundNoise")
-            Log.d("CallTracker", "  Was skipped: $isSkipped")
-            Log.d("CallTracker", "  Calibration date: $calibrationDate")
-            Log.d("CallTracker", "  Calibration time: $calibrationTime")
-            Log.d("CallTracker", "=== END CALIBRATION SETTINGS ===")
-        } else {
-            Log.d("CallTracker", "⚠️ NO CALIBRATION DATA FOUND, using defaults")
-            Log.d("CallTracker", "  Default speech threshold: $speechThreshold")
-            Log.d("CallTracker", "  Default background noise: $backgroundNoise")
-        }
-    }
-    
-    private fun initializeSensors() {
-        try {
-            sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
-            proximitySensor = sensorManager?.getDefaultSensor(Sensor.TYPE_PROXIMITY)
-            accelerometer = sensorManager?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
-            
-            Log.d("CallTracker", "Sensor initialization:")
-            Log.d("CallTracker", "  Proximity sensor: ${if (proximitySensor != null) "✅ Available" else "❌ Not available"}")
-            Log.d("CallTracker", "  Accelerometer: ${if (accelerometer != null) "✅ Available" else "❌ Not available"}")
-        } catch (e: Exception) {
-            Log.e("CallTracker", "Error initializing sensors", e)
-        }
-    }
-    
-    override fun onSensorChanged(event: SensorEvent?) {
-        when (event?.sensor?.type) {
-            Sensor.TYPE_PROXIMITY -> {
-                val distance = event.values[0]
-                val wasNearFace = isNearFace
-                isNearFace = distance < event.sensor.maximumRange / 2
-                
-                if (isTracking && wasNearFace != isNearFace) {
-                    Log.d("CallTracker", "Proximity changed: ${if (isNearFace) "Near face" else "Away from face"}")
+        // Quick environment sampling at call start
+        coroutineScope.launch {
+            try {
+                val samples = mutableListOf<Double>()
+                repeat(20) { // Sample for 2 seconds (100ms intervals)
+                    audioRecord?.let { record ->
+                        if (record.recordingState == AudioRecord.RECORDSTATE_RECORDING) {
+                            val buffer = ShortArray(BUFFER_SIZE)
+                            val read = record.read(buffer, 0, buffer.size)
+                            if (read > 0) {
+                                val rms = calculateRMS(buffer, read)
+                                val dbLevel = 20 * kotlin.math.log10(rms / 32767.0)
+                                samples.add(dbLevel)
+                            }
+                        }
+                    }
+                    delay(100)
                 }
-            }
-            Sensor.TYPE_ACCELEROMETER -> {
-                val x = event.values[0]
-                val y = event.values[1]
-                val z = event.values[2]
-                val movement = kotlin.math.sqrt((x * x + y * y + z * z).toDouble())
                 
-                if (movement > 12.0) { // Threshold for detecting phone movement
-                    lastMovementTime = System.currentTimeMillis()
+                if (samples.isNotEmpty()) {
+                    environmentBaseLevel = samples.average()
+                    speakingThreshold = environmentBaseLevel + ENVIRONMENT_THRESHOLD_DB
+                    calibrationComplete = true
+                    
+                    Log.d("CallTracker", "✅ Environment calibration complete")
+                    Log.d("CallTracker", "  Base environment: ${String.format("%.1f", environmentBaseLevel)} dB")
+                    Log.d("CallTracker", "  Speaking threshold: ${String.format("%.1f", speakingThreshold)} dB")
+                } else {
+                    // Fallback values
+                    environmentBaseLevel = -40.0
+                    speakingThreshold = environmentBaseLevel + ENVIRONMENT_THRESHOLD_DB
+                    calibrationComplete = true
+                    
+                    Log.w("CallTracker", "⚠️ Using fallback environment levels")
                 }
+            } catch (e: Exception) {
+                Log.e("CallTracker", "Error during environment calibration", e)
+                environmentBaseLevel = -40.0
+                speakingThreshold = environmentBaseLevel + ENVIRONMENT_THRESHOLD_DB
+                calibrationComplete = true
             }
         }
-    }
-    
-    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
-        // Not needed for this implementation
     }
     
     private fun initializeAudioRecord() {
         try {
             val bufferSize = AudioRecord.getMinBufferSize(
-                44100,
+                SAMPLE_RATE,
                 android.media.AudioFormat.CHANNEL_IN_MONO,
                 android.media.AudioFormat.ENCODING_PCM_16BIT
             )
             
-            if (bufferSize == AudioRecord.ERROR_BAD_VALUE || bufferSize == AudioRecord.ERROR) {
-                Log.e("CallTracker", "Invalid buffer size for AudioRecord")
-                return
-            }
+            val actualBufferSize = maxOf(bufferSize, BUFFER_SIZE)
             
             audioRecord = AudioRecord(
                 MediaRecorder.AudioSource.MIC,
-                44100,
+                SAMPLE_RATE,
                 android.media.AudioFormat.CHANNEL_IN_MONO,
                 android.media.AudioFormat.ENCODING_PCM_16BIT,
-                bufferSize
+                actualBufferSize
             )
             
-            if (audioRecord?.state != AudioRecord.STATE_INITIALIZED) {
-                Log.e("CallTracker", "AudioRecord not initialized properly")
-                audioRecord = null
+            if (audioRecord?.state == AudioRecord.STATE_INITIALIZED) {
+                Log.d("CallTracker", "✅ AudioRecord initialized successfully")
+                Log.d("CallTracker", "  Sample rate: $SAMPLE_RATE Hz")
+                Log.d("CallTracker", "  Buffer size: $actualBufferSize bytes")
             } else {
-                Log.d("CallTracker", "AudioRecord initialized successfully")
+                Log.e("CallTracker", "❌ AudioRecord failed to initialize")
+                audioRecord = null
             }
         } catch (e: SecurityException) {
             Log.e("CallTracker", "Permission denied for audio recording", e)
@@ -175,12 +141,13 @@ class CallTracker(
         }
     }
     
+    
+    
     fun startTracking(contactName: String, phoneNumber: String) {
         if (isTracking) return
         
-        Log.d("CallTracker", "=== STARTING CALL TRACKING ===")
+        Log.d("CallTracker", "=== STARTING AUDIO-BASED CALL TRACKING ===")
         Log.d("CallTracker", "Contact: $contactName ($phoneNumber)")
-        Log.d("CallTracker", "Current calibration - Speech: $speechThreshold, Background: $backgroundNoise")
         
         isTracking = true
         currentContactName = contactName
@@ -189,6 +156,7 @@ class CallTracker(
         speakingTime = 0L
         listeningTime = 0L
         consecutiveSilentChecks = 0
+        calibrationComplete = false
         
         // Reinitialize AudioRecord if needed
         if (audioRecord == null) {
@@ -196,40 +164,42 @@ class CallTracker(
             initializeAudioRecord()
         }
         
-        if (isAndroid10Plus) {
-            // Use sensor-based approach for Android 10+
-            startSensorBasedTracking()
-        } else {
-            // Try microphone approach for older Android versions
-            audioRecord?.let { record ->
-                Log.d("CallTracker", "AudioRecord state: ${record.state}, recording state: ${record.recordingState}")
-                try {
-                    record.startRecording()
-                    startAudioMonitoring()
-                    Log.d("CallTracker", "✅ Audio recording started successfully - using REAL audio analysis")
-                } catch (e: IllegalStateException) {
-                    Log.e("CallTracker", "Failed to start audio recording", e)
-                    startSensorBasedTracking()
-                } catch (e: SecurityException) {
-                    Log.e("CallTracker", "Permission denied for audio recording", e)
-                    startSensorBasedTracking()
-                }
-            } ?: run {
-                Log.w("CallTracker", "⚠️ AudioRecord not available, using sensor-based tracking")
-                startSensorBasedTracking()
+        audioRecord?.let { record ->
+            try {
+                record.startRecording()
+                Log.d("CallTracker", "✅ Audio recording started - beginning environment calibration")
+                
+                // Start environment calibration
+                calibrateEnvironmentLevel()
+                
+                // Start audio monitoring after brief delay for calibration
+                handler.postDelayed({
+                    startAudioAnalysis()
+                }, 2500) // 2.5 second delay for environment calibration
+                
+            } catch (e: IllegalStateException) {
+                Log.e("CallTracker", "Failed to start audio recording", e)
+            } catch (e: SecurityException) {
+                Log.e("CallTracker", "Permission denied for audio recording", e)
             }
+        } ?: run {
+            Log.e("CallTracker", "❌ AudioRecord not available, cannot track call")
         }
         
-        Log.d("CallTracker", "=== CALL TRACKING STARTED ===")
+        Log.d("CallTracker", "=== AUDIO CALL TRACKING STARTED ===")
     }
     
     fun stopTracking() {
         if (!isTracking) return
         
-        Log.d("CallTracker", "=== STOPPING CALL TRACKING ===")
+        Log.d("CallTracker", "=== STOPPING AUDIO CALL TRACKING ===")
         Log.d("CallTracker", "Contact: $currentContactName")
         
         isTracking = false
+        audioMonitoringActive = false
+        
+        // Stop audio analysis
+        stopAudioAnalysis()
         
         // Safely stop audio recording
         try {
@@ -245,24 +215,32 @@ class CallTracker(
             Log.e("CallTracker", "Error stopping audio recording", e)
         }
         
-        stopAudioMonitoring()
-        stopSensorMonitoring()
-        
         val totalDuration = System.currentTimeMillis() - callStartTime
         
-        Log.d("CallTracker", "RAW TRACKING RESULTS:")
-        Log.d("CallTracker", "  Speaking time: ${speakingTime}ms (${speakingTime/1000}s)")
-        Log.d("CallTracker", "  Listening time: ${listeningTime}ms (${listeningTime/1000}s)")
-        Log.d("CallTracker", "  Total duration: ${totalDuration}ms (${totalDuration/1000}s)")
+        Log.d("CallTracker", "AUDIO ANALYSIS RESULTS:")
+        Log.d("CallTracker", "  Speaking time: ${speakingTime}ms (${String.format("%.1f", speakingTime/1000.0)}s)")
+        Log.d("CallTracker", "  Listening time: ${listeningTime}ms (${String.format("%.1f", listeningTime/1000.0)}s)")
+        Log.d("CallTracker", "  Total duration: ${totalDuration}ms (${String.format("%.1f", totalDuration/1000.0)}s)")
+        Log.d("CallTracker", "  Environment threshold: ${String.format("%.1f", environmentBaseLevel)} + ${ENVIRONMENT_THRESHOLD_DB} dB")
         
-        // If we have no audio tracking data, estimate based on call duration
-        if (speakingTime == 0L && listeningTime == 0L && totalDuration > 0) {
-            // Rough estimation: assume 60% listening, 40% speaking for normal conversation
-            listeningTime = (totalDuration * 0.6).toLong()
-            speakingTime = (totalDuration * 0.4).toLong()
-            Log.d("CallTracker", "⚠️ NO AUDIO DATA - Using estimated talk/listen ratio")
-            Log.d("CallTracker", "  Estimated speaking: ${speakingTime}ms")
-            Log.d("CallTracker", "  Estimated listening: ${listeningTime}ms")
+        // Validate results - ensure we have reasonable data
+        val trackedTime = speakingTime + listeningTime
+        if (trackedTime < totalDuration * 0.8 || speakingTime == 0L) {
+            Log.w("CallTracker", "⚠️ Incomplete audio tracking detected")
+            
+            // Distribute untracked time based on existing ratio
+            val missingTime = totalDuration - trackedTime
+            if (speakingTime > 0 && listeningTime > 0) {
+                val speakingRatio = speakingTime.toDouble() / trackedTime
+                speakingTime += (missingTime * speakingRatio).toLong()
+                listeningTime += (missingTime * (1 - speakingRatio)).toLong()
+                Log.d("CallTracker", "🔧 Adjusted times based on detected ratio")
+            } else {
+                // No valid data, use conservative estimate
+                listeningTime = (totalDuration * 0.6).toLong()
+                speakingTime = (totalDuration * 0.4).toLong()
+                Log.d("CallTracker", "🔧 Using fallback 60/40 ratio")
+            }
         } else {
             Log.d("CallTracker", "✅ REAL AUDIO DATA captured successfully!")
         }
@@ -289,134 +267,87 @@ class CallTracker(
             }
         }
         
-        Log.d("CallTracker", "=== CALL TRACKING STOPPED ===")
+        Log.d("CallTracker", "=== AUDIO CALL TRACKING STOPPED ===")
     }
     
-    private fun startAudioMonitoring() {
+    private fun startAudioAnalysis() {
+        if (!calibrationComplete) {
+            Log.w("CallTracker", "Environment calibration not complete, waiting...")
+            // Retry after a short delay
+            handler.postDelayed({
+                startAudioAnalysis()
+            }, 500)
+            return
+        }
+        
+        audioMonitoringActive = true
+        Log.d("CallTracker", "🎤 Starting real-time audio analysis")
+        Log.d("CallTracker", "Using threshold: ${String.format("%.1f", speakingThreshold)} dB (${String.format("%.1f", environmentBaseLevel)} + ${ENVIRONMENT_THRESHOLD_DB})")
+        
         trackingRunnable = object : Runnable {
             override fun run() {
-                if (!isTracking) return
+                if (!isTracking || !audioMonitoringActive) return
                 
                 audioRecord?.let { record ->
                     if (record.recordingState != AudioRecord.RECORDSTATE_RECORDING) {
-                        Log.w("CallTracker", "AudioRecord not recording, switching to basic tracking")
-                        startBasicTimeTracking()
+                        Log.w("CallTracker", "AudioRecord not recording, stopping analysis")
                         return
                     }
                     
-                    val buffer = ShortArray(1024)
+                    val buffer = ShortArray(BUFFER_SIZE)
                     val read = record.read(buffer, 0, buffer.size)
                     
                     if (read > 0) {
-                        // Calculate RMS (Root Mean Square) for better audio level detection
                         val rms = calculateRMS(buffer, read)
+                        val dbLevel = 20 * kotlin.math.log10(rms / 32767.0)
                         
-                        // Use a more sensitive threshold calculation
-                        // The speechThreshold from calibration is already optimized, so use it more directly
-                        val effectiveThreshold = backgroundNoise + (speechThreshold - backgroundNoise) * 0.3
-                        val isSpeaking = rms > effectiveThreshold
+                        // Check if audio level exceeds environment + threshold
+                        val isSpeaking = dbLevel > speakingThreshold
                         
-                        // Log every 1 second (every 10 iterations) for debugging
+                        // Log detailed analysis every 2 seconds for debugging
                         val currentTime = System.currentTimeMillis()
-                        if (currentTime % 1000 < 200) { // Log roughly every second
-                            Log.d("CallTracker", "AUDIO ANALYSIS: RMS=$rms, threshold=$effectiveThreshold, backgroundNoise=$backgroundNoise, speechThreshold=$speechThreshold, isSpeaking=$isSpeaking")
+                        if ((currentTime - callStartTime) % 2000 < 100) {
+                            Log.d("CallTracker", "AUDIO: ${String.format("%.1f", dbLevel)} dB | Threshold: ${String.format("%.1f", speakingThreshold)} dB | Speaking: $isSpeaking")
                         }
                         
                         if (isSpeaking) {
-                            speakingTime += 100 // Increment speaking time by 100ms
+                            speakingTime += 100 // Increment by 100ms
                             consecutiveSilentChecks = 0
-                            Log.v("CallTracker", "✨ SPEAKING: RMS=$rms > threshold=$effectiveThreshold")
+                            if (currentTime % 5000 < 100) { // Log speaking detection every 5 seconds
+                                Log.d("CallTracker", "🗣️ SPEAKING detected: ${String.format("%.1f", dbLevel)} dB")
+                            }
                         } else {
                             consecutiveSilentChecks++
                             if (consecutiveSilentChecks >= maxSilentChecks) {
-                                listeningTime += 100 // Increment listening time by 100ms
-                                Log.v("CallTracker", "👂 LISTENING: RMS=$rms < threshold=$effectiveThreshold")
+                                listeningTime += 100 // Increment by 100ms
+                                if (currentTime % 5000 < 100) { // Log listening detection every 5 seconds
+                                    Log.d("CallTracker", "👂 LISTENING detected: ${String.format("%.1f", dbLevel)} dB")
+                                }
                             }
                         }
                         
-                        lastAudioLevel = rms
+                        lastAudioLevel = dbLevel
                     }
                 }
                 
-                handler.postDelayed(this, 100) // Check every 100ms
+                handler.postDelayed(this, 100) // Analyze every 100ms
             }
         }
         
         handler.post(trackingRunnable!!)
+        Log.d("CallTracker", "✅ Audio analysis started successfully")
     }
     
-    private fun startSensorBasedTracking() {
-        Log.d("CallTracker", "🔍 Starting sensor-based call tracking")
+    private fun stopAudioAnalysis() {
+        audioMonitoringActive = false
         
-        // Start sensor monitoring
-        proximitySensor?.let { sensor ->
-            sensorManager?.registerListener(this, sensor, SensorManager.SENSOR_DELAY_UI)
-            Log.d("CallTracker", "Proximity sensor monitoring started")
+        trackingRunnable?.let { runnable ->
+            handler.removeCallbacks(runnable)
+            trackingRunnable = null
+            Log.d("CallTracker", "Audio analysis stopped")
         }
-        
-        accelerometer?.let { sensor ->
-            sensorManager?.registerListener(this, sensor, SensorManager.SENSOR_DELAY_UI)
-            Log.d("CallTracker", "Accelerometer monitoring started")
-        }
-        
-        // Start intelligent timing analysis
-        trackingRunnable = object : Runnable {
-            override fun run() {
-                if (!isTracking) return
-                
-                val currentTime = System.currentTimeMillis()
-                val callDuration = currentTime - callStartTime
-                
-                // Determine if user is likely speaking based on patterns
-                val isSpeaking = determineIfSpeaking(callDuration)
-                
-                if (isSpeaking) {
-                    speakingTime += 500 // Increment by 500ms
-                    Log.v("CallTracker", "🗣️ SPEAKING detected (pattern-based)")
-                } else {
-                    listeningTime += 500 // Increment by 500ms  
-                    Log.v("CallTracker", "👂 LISTENING detected (pattern-based)")
-                }
-                
-                // Log progress every 10 seconds
-                if (callDuration % 10000 < 1000) {
-                    Log.d("CallTracker", "Progress: Speaking=${speakingTime/1000}s, Listening=${listeningTime/1000}s, Total=${callDuration/1000}s")
-                }
-                
-                handler.postDelayed(this, 500) // Check every 500ms
-            }
-        }
-        
-        handler.post(trackingRunnable!!)
     }
     
-    private fun determineIfSpeaking(callDuration: Long): Boolean {
-        val currentTime = System.currentTimeMillis()
-        
-        // Pattern 1: Natural conversation rhythm (alternate speaking/listening)
-        val conversationCycle = 6000L // 6 second cycles
-        val cyclePosition = (callDuration % conversationCycle) / 1000.0
-        
-        // Pattern 2: Proximity sensor influence
-        val proximityFactor = if (isNearFace) 1.2 else 0.8
-        
-        // Pattern 3: Movement-based detection
-        val timeSinceMovement = currentTime - lastMovementTime
-        val movementFactor = if (timeSinceMovement < 2000) 1.1 else 1.0
-        
-        // Pattern 4: Realistic conversation ratio (40% speaking, 60% listening)
-        val basePattern = when {
-            cyclePosition < 2.4 -> true  // First 40% of cycle - speaking
-            else -> false             // Last 60% of cycle - listening
-        }
-        
-        // Add some randomness to make it more natural
-        val randomFactor = Random.nextDouble(0.8, 1.2)
-        val confidence = proximityFactor * movementFactor * randomFactor
-        
-        // Sometimes flip the pattern based on confidence
-        return if (confidence > 1.1) basePattern else !basePattern
-    }
     
     private fun calculateRMS(audioBuffer: ShortArray, readSize: Int): Double {
         var sum = 0.0
@@ -426,27 +357,6 @@ class CallTracker(
         return sqrt(sum / readSize)
     }
     
-    private fun startBasicTimeTracking() {
-        // This method is now handled by startSensorBasedTracking for consistent approach
-        Log.d("CallTracker", "Using sensor-based tracking instead of basic time tracking")
-        startSensorBasedTracking()
-    }
-    
-    private fun stopAudioMonitoring() {
-        trackingRunnable?.let { runnable ->
-            handler.removeCallbacks(runnable)
-            trackingRunnable = null
-        }
-    }
-    
-    private fun stopSensorMonitoring() {
-        try {
-            sensorManager?.unregisterListener(this)
-            Log.d("CallTracker", "Sensor monitoring stopped")
-        } catch (e: Exception) {
-            Log.e("CallTracker", "Error stopping sensor monitoring", e)
-        }
-    }
     
     fun isCurrentlyTracking(): Boolean = isTracking
     
@@ -455,7 +365,21 @@ class CallTracker(
     fun getCurrentPhoneNumber(): String = currentPhoneNumber
     
     fun cleanup() {
-        stopSensorMonitoring()
+        stopAudioAnalysis()
+        
+        audioRecord?.let { record ->
+            try {
+                if (record.recordingState == AudioRecord.RECORDSTATE_RECORDING) {
+                    record.stop()
+                }
+                record.release()
+                audioRecord = null
+                Log.d("CallTracker", "AudioRecord cleaned up")
+            } catch (e: Exception) {
+                Log.e("CallTracker", "Error cleaning up AudioRecord", e)
+            }
+        }
+        
         coroutineScope.cancel()
     }
 }

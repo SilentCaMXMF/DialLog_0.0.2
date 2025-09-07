@@ -11,11 +11,11 @@ android {
     compileSdk = 33
 
     defaultConfig {
-        applicationId = "com.example.diallog002"
+        applicationId = "com.pedroocalado.diallog"
         minSdk = 21
         targetSdk = 33
         versionCode = 1
-        versionName = "1.0"
+        versionName = "3.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -23,13 +23,25 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            // You'll need to create these files:
+            storeFile = file("upload-keystore.jks")
+            storePassword = "YOUR_KEYSTORE_PASSWORD"
+            keyAlias = "upload"
+            keyPassword = "YOUR_KEY_PASSWORD"
+        }
+    }
+
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 

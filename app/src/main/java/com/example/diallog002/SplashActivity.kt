@@ -91,16 +91,8 @@ class SplashActivity : AppCompatActivity() {
     
     private fun startMainActivity() {
         Handler(Looper.getMainLooper()).postDelayed({
-            val prefs = getSharedPreferences("MicCalibration", Context.MODE_PRIVATE)
-            val calibrationCompleted = prefs.getBoolean("calibration_completed", false)
-            
-            val intent = if (calibrationCompleted) {
-                Log.d("SplashActivity", "Calibration already completed, going to MainActivity")
-                Intent(this, MainActivity::class.java)
-            } else {
-                Log.d("SplashActivity", "First time launch, going to MicCalibrationActivity")
-                Intent(this, MicCalibrationActivity::class.java)
-            }
+            Log.d("SplashActivity", "Starting MainActivity")
+            val intent = Intent(this, MainActivity::class.java)
             
             startActivity(intent)
             

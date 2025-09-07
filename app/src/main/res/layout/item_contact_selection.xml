@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="12dp"
+    android:background="@drawable/contact_selection_background"
+    android:layout_marginVertical="2dp"
+    android:clickable="true"
+    android:focusable="true">
+
+    <!-- Selection Checkbox (only visible in bulk selection mode) -->
+    <CheckBox
+        android:id="@+id/selection_checkbox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_marginEnd="12dp"
+        android:visibility="gone" />
+
+    <!-- Contact Info -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/contact_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Contact Name"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#333333" />
+
+        <TextView
+            android:id="@+id/phone_number"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="+1234567890"
+            android:textSize="14sp"
+            android:textColor="#666666"
+            android:layout_marginTop="4dp" />
+
+    </LinearLayout>
+
+    <!-- Add Button -->
+    <ImageButton
+        android:id="@+id/add_button"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:src="@drawable/ic_add"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Add to favorites"
+        android:tint="#4CAF50"
+        android:layout_gravity="center_vertical" />
+
+</LinearLayout>

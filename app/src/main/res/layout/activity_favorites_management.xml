@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    android:background="#F5F5F5">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Current Favorites Section -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Current Favorites"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="#333333" />
+
+            <TextView
+                android:id="@+id/favorites_count_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0 contacts"
+                android:textSize="14sp"
+                android:textColor="#666666"
+                android:background="@drawable/rounded_background"
+                android:padding="8dp" />
+
+        </LinearLayout>
+
+        <!-- Sort and Actions -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+
+            <Spinner
+                android:id="@+id/sort_spinner"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp" />
+
+            <Button
+                android:id="@+id/remove_all_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Remove All"
+                android:textSize="12sp"
+                android:backgroundTint="#FF5722"
+                android:textColor="@android:color/white" />
+
+        </LinearLayout>
+
+        <!-- Favorites List -->
+        <TextView
+            android:id="@+id/no_favorites_text"
+            android:layout_width="match_parent"
+            android:layout_height="120dp"
+            android:text="No favorite contacts yet.\nAdd contacts below to enable automatic call tracking."
+            android:textSize="16sp"
+            android:textColor="#999999"
+            android:gravity="center"
+            android:background="@drawable/dashed_border"
+            android:layout_marginBottom="16dp"
+            android:visibility="visible" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/favorites_recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/rounded_background"
+            android:padding="8dp"
+            android:visibility="gone" />
+
+        <!-- Divider -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#E0E0E0"
+            android:layout_marginVertical="16dp" />
+
+        <!-- Add Contacts Section -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Add to Favorites"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#333333"
+            android:layout_marginBottom="8dp" />
+
+        <!-- Search -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp"
+            android:background="@drawable/search_background"
+            android:padding="4dp">
+
+            <EditText
+                android:id="@+id/search_edit_text"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="Search contacts..."
+                android:inputType="text"
+                android:background="@android:color/transparent"
+                android:padding="8dp"
+                android:textSize="16sp" />
+
+            <ImageButton
+                android:id="@+id/clear_search_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_clear"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Clear search"
+                android:padding="8dp" />
+
+        </LinearLayout>
+
+        <!-- Add Actions -->
+        <Button
+            android:id="@+id/add_all_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Add All"
+            android:backgroundTint="#4CAF50"
+            android:textColor="@android:color/white"
+            android:layout_marginBottom="8dp" />
+
+        <!-- Contacts List -->
+        <TextView
+            android:id="@+id/no_contacts_text"
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:text="All contacts are already in favorites!"
+            android:textSize="16sp"
+            android:textColor="#999999"
+            android:gravity="center"
+            android:background="@drawable/rounded_background"
+            android:visibility="gone" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/all_contacts_recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="300dp"
+            android:background="@drawable/rounded_background"
+            android:padding="8dp"
+            android:nestedScrollingEnabled="true" />
+
+    </LinearLayout>
+</ScrollView>

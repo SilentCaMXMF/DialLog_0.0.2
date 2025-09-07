@@ -15,49 +15,90 @@ object ContactManager {
         return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     }
     
-    fun loadContacts(context: Context): List<Contact> {
+fun loadContacts(context: Context): List<Contact> {
         Log.d("ContactManager", "loadContacts: Starting to load all contacts")
+        
+        // Check permissions first
+        if (context.checkSelfPermission(android.Manifest.permission.READ_CONTACTS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            Log.e("ContactManager", "loadContacts: READ_CONTACTS permission not granted")
+            return emptyList()
+        }
+        
         val contacts = mutableListOf<Contact>()
+        val contactsMap = mutableMapOf<String, Contact>() // To avoid duplicates
         val contentResolver: ContentResolver = context.contentResolver
         
         // Get favorite IDs first for reference
         val favoriteIds = getFavoriteContactIds(context)
         Log.d("ContactManager", "loadContacts: Will mark ${favoriteIds.size} contacts as favorites")
         
-        val cursor: Cursor? = contentResolver.query(
-            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-            arrayOf(
-                ContactsContract.CommonDataKinds.Phone.CONTACT_ID,
-                ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
-                ContactsContract.CommonDataKinds.Phone.NUMBER
-            ),
-            null,
-            null,
-            ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " ASC"
-        )
-        
-        cursor?.use {
-            var contactCount = 0
-            var favoriteCount = 0
-            while (it.moveToNext()) {
-                val id = it.getString(0)
-                val name = it.getString(1)
-                val phoneNumber = it.getString(2)
+        try {
+            val cursor: Cursor? = contentResolver.query(
+                ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                arrayOf(
+                    ContactsContract.CommonDataKinds.Phone.CONTACT_ID,
+                    ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+                    ContactsContract.CommonDataKinds.Phone.NUMBER
+                ),
+                "${ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME} IS NOT NULL",
+                null,
+                ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " ASC"
+            )
+            
+            cursor?.use {
+                var contactCount = 0
+                var favoriteCount = 0
+                val idColumnIndex = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.CONTACT_ID)
+                val nameColumnIndex = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
+                val phoneColumnIndex = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
                 
-                val isFavorite = isFavorite(context, id)
-                contacts.add(Contact(id, name, phoneNumber, isFavorite))
-                
-                contactCount++
-                if (isFavorite) {
-                    favoriteCount++
-                    Log.d("ContactManager", "loadContacts: Found favorite contact: $name (ID: $id)")
+                if (idColumnIndex < 0 || nameColumnIndex < 0 || phoneColumnIndex < 0) {
+                    Log.e("ContactManager", "loadContacts: Invalid column indices")
+                    return emptyList()
                 }
+                
+                while (it.moveToNext()) {
+                    try {
+                        val id = it.getString(idColumnIndex)
+                        val name = it.getString(nameColumnIndex)
+                        val phoneNumber = it.getString(phoneColumnIndex)
+                        
+                        // Skip contacts with null or empty data
+                        if (id.isNullOrEmpty() || name.isNullOrEmpty() || phoneNumber.isNullOrEmpty()) {
+                            continue
+                        }
+                        
+                        // Use contact ID as unique key to avoid duplicates
+                        val uniqueKey = "${id}_${phoneNumber.replace("\\s".toRegex(), "")}"
+                        if (!contactsMap.containsKey(uniqueKey)) {
+                            val isFavorite = favoriteIds.contains(id)
+                            val contact = Contact(id, name, phoneNumber, isFavorite)
+                            contactsMap[uniqueKey] = contact
+                            
+                            contactCount++
+                            if (isFavorite) {
+                                favoriteCount++
+                                Log.d("ContactManager", "loadContacts: Found favorite contact: $name (ID: $id)")
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.e("ContactManager", "loadContacts: Error processing contact row", e)
+                        continue
+                    }
+                }
+                
+                contacts.addAll(contactsMap.values)
+                Log.d("ContactManager", "loadContacts: Processed $contactCount unique contacts, $favoriteCount marked as favorites")
+            } ?: run {
+                Log.e("ContactManager", "loadContacts: Cursor is null, no contacts found")
             }
-            Log.d("ContactManager", "loadContacts: Processed $contactCount contacts, $favoriteCount marked as favorites")
+        } catch (e: Exception) {
+            Log.e("ContactManager", "loadContacts: Error querying contacts", e)
+            return emptyList()
         }
         
         Log.d("ContactManager", "loadContacts: Returning ${contacts.size} contacts")
-        return contacts
+        return contacts.sortedBy { it.name.lowercase() }
     }
     
     fun toggleFavorite(context: Context, contactId: String): Boolean {
