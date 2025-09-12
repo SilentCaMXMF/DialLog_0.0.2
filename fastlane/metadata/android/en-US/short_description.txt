@@ -1,0 +1,1 @@
+Automatically track talk/listen time during calls with favorite contacts

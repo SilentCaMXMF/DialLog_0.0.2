@@ -1,0 +1,31 @@
+DialLog is a privacy-focused call tracking app that automatically monitors your speaking and listening patterns during phone calls with your favorite contacts.
+
+<b>Features:</b>
+• Automatic call tracking for selected phone numbers
+• Real-time audio analysis to measure talk vs listen time
+• Individual phone number favorites (not entire contacts)
+• Comprehensive call history and analytics
+• Communication style analysis
+• No data leaves your device - complete privacy
+• Clean, material design interface
+
+<b>How it works:</b>
+1. Add specific phone numbers to your favorites
+2. When those numbers call, DialLog automatically starts tracking
+3. View detailed analytics of your communication patterns
+4. All data stays private on your device
+
+<b>Perfect for:</b>
+• Business professionals monitoring client communication
+• Anyone wanting to improve their listening skills
+• People interested in communication analytics
+• Privacy-conscious users who want local-only data
+
+<b>Privacy:</b>
+All data is stored locally on your device. No internet connection required for core functionality. No tracking, no ads, completely open source.
+
+<b>Permissions:</b>
+• Phone: Required to detect incoming/outgoing calls
+• Contacts: To display contact names
+• Microphone: For audio analysis during calls (processed locally)
+• Storage: To save call history data locally

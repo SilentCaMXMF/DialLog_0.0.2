@@ -3,8 +3,9 @@
 
 [![Android](https://img.shields.io/badge/Platform-Android-green.svg)](https://android.com/)
 [![Kotlin](https://img.shields.io/badge/Language-Kotlin-blue.svg)](https://kotlinlang.org/)
-[![License](https://img.shields.io/badge/License-Apache%202.0-orange.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-GPL--3.0-orange.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/Version-3.0.0-brightgreen.svg)](CHANGELOG.md)
+[![F-Droid](https://img.shields.io/badge/Get%20it%20on-F--Droid-blue.svg)](https://f-droid.org/packages/com.pedroocalado.diallog/)
 
 > Transform your phone calls into actionable insights with real-time audio analysis and communication analytics.
 
@@ -23,10 +24,19 @@ DialLog is an open-source Android application that provides intelligent call tra
 ## 🚀 Quick Start
 
 ### For Users
-1. **Download**: Get the latest APK from [Releases](https://github.com/pedroocalado/DialLog/releases)
+
+**Option 1: F-Droid (Recommended)**
+1. **Install F-Droid**: Download from [f-droid.org](https://f-droid.org/)
+2. **Search**: Look for "DialLog" in the F-Droid app
+3. **Install**: Tap install and grant permissions
+4. **Setup**: Add your important phone numbers to favorites
+5. **Track**: Make calls and view analytics in real-time
+
+**Option 2: Direct APK**
+1. **Download**: Get the latest APK from [Releases](https://github.com/SilentCaMXMF/DialLog_0.0.2/releases)
 2. **Install**: Enable "Install from unknown sources" and install the APK
 3. **Permissions**: Grant necessary permissions (contacts, phone, microphone)
-4. **Setup**: Add your important contacts to favorites
+4. **Setup**: Add your important phone numbers to favorites
 5. **Track**: Make calls and view analytics in real-time
 
 ### For Developers
