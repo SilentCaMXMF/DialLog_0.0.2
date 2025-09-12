@@ -10,6 +10,7 @@ import android.util.Log
 object ContactManager {
     private const val PREFS_NAME = "ContactFavorites"
     private const val KEY_FAVORITES = "favorite_contact_ids"
+    private const val KEY_FAVORITE_NUMBERS = "favorite_phone_numbers"
     
     private fun getSharedPreferences(context: Context): SharedPreferences {
         return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -155,7 +156,98 @@ fun loadContacts(context: Context): List<Contact> {
         val prefs = getSharedPreferences(context)
         val editor = prefs.edit()
         editor.remove(KEY_FAVORITES)
+        editor.remove(KEY_FAVORITE_NUMBERS)
         editor.apply()
         Log.d("ContactManager", "All favorites cleared")
+    }
+    
+    // NEW PHONE NUMBER-BASED FAVORITES SYSTEM
+    
+    /**
+     * Add or remove a specific phone number from favorites
+     */
+    fun toggleFavoriteNumber(context: Context, phoneNumber: String, contactName: String, contactId: String): Boolean {
+        val prefs = getSharedPreferences(context)
+        val favoriteNumbers = getFavoriteNumbers(context).toMutableSet()
+        
+        val cleanPhoneNumber = phoneNumber.replace("\\s".toRegex(), "")
+        Log.d("ContactManager", "toggleFavoriteNumber: Clean phone number: $cleanPhoneNumber")
+        
+        val favoriteNumber = FavoriteNumber(cleanPhoneNumber, contactName, contactId)
+        
+        val newFavoriteState = if (favoriteNumbers.any { it.phoneNumber == cleanPhoneNumber }) {
+            favoriteNumbers.removeAll { it.phoneNumber == cleanPhoneNumber }
+            false
+        } else {
+            favoriteNumbers.add(favoriteNumber)
+            true
+        }
+        
+        // Convert to JSON strings for storage
+        val jsonStrings = favoriteNumbers.map { "${it.phoneNumber}|${it.contactName}|${it.contactId}" }.toSet()
+        
+        val editor = prefs.edit()
+        editor.putStringSet(KEY_FAVORITE_NUMBERS, jsonStrings)
+        val saveResult = editor.commit()
+        
+        Log.d("ContactManager", "toggleFavoriteNumber: Phone number $cleanPhoneNumber favorite state: $newFavoriteState")
+        return newFavoriteState
+    }
+    
+    /**
+     * Check if a specific phone number is a favorite
+     */
+    fun isPhoneNumberFavorite(context: Context, phoneNumber: String): Boolean {
+        val cleanPhoneNumber = phoneNumber.replace("\\s".toRegex(), "")
+        return getFavoriteNumbers(context).any { it.phoneNumber == cleanPhoneNumber }
+    }
+    
+    /**
+     * Get all favorite phone numbers
+     */
+    fun getFavoriteNumbers(context: Context): Set<FavoriteNumber> {
+        val prefs = getSharedPreferences(context)
+        val jsonStrings = prefs.getStringSet(KEY_FAVORITE_NUMBERS, emptySet()) ?: emptySet()
+        
+        return jsonStrings.mapNotNull { jsonString ->
+            try {
+                val parts = jsonString.split("|")
+                if (parts.size >= 3) {
+                    FavoriteNumber(parts[0], parts[1], parts[2])
+                } else null
+            } catch (e: Exception) {
+                Log.e("ContactManager", "Error parsing favorite number: $jsonString", e)
+                null
+            }
+        }.toSet()
+    }
+    
+    /**
+     * Remove a specific phone number from favorites
+     */
+    fun removeFavoriteNumber(context: Context, phoneNumber: String): Boolean {
+        val prefs = getSharedPreferences(context)
+        val favoriteNumbers = getFavoriteNumbers(context).toMutableSet()
+        
+        val cleanPhoneNumber = phoneNumber.replace("\\s".toRegex(), "")
+        val removed = favoriteNumbers.removeAll { it.phoneNumber == cleanPhoneNumber }
+        
+        if (removed) {
+            val jsonStrings = favoriteNumbers.map { "${it.phoneNumber}|${it.contactName}|${it.contactId}" }.toSet()
+            val editor = prefs.edit()
+            editor.putStringSet(KEY_FAVORITE_NUMBERS, jsonStrings)
+            editor.commit()
+            Log.d("ContactManager", "Removed phone number $cleanPhoneNumber from favorites")
+        }
+        
+        return removed
+    }
+    
+    /**
+     * Find favorite number by phone number
+     */
+    fun findFavoriteByPhoneNumber(context: Context, phoneNumber: String): FavoriteNumber? {
+        val cleanPhoneNumber = phoneNumber.replace("\\s".toRegex(), "")
+        return getFavoriteNumbers(context).find { it.phoneNumber == cleanPhoneNumber }
     }
 }

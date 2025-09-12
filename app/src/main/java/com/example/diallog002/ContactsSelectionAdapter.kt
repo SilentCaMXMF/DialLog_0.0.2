@@ -49,6 +49,16 @@ class ContactsSelectionAdapter(
             holder.addButton.visibility = View.VISIBLE
         }
         
+        // Update add button appearance based on whether this number is already a favorite
+        val isAlreadyFavorite = ContactManager.isPhoneNumberFavorite(holder.itemView.context, contact.phoneNumber)
+        if (isAlreadyFavorite) {
+            holder.addButton.setImageResource(android.R.drawable.btn_star_big_on)
+            holder.addButton.setColorFilter(0xFFFFB300.toInt()) // Gold color for favorite
+        } else {
+            holder.addButton.setImageResource(R.drawable.ic_add)
+            holder.addButton.setColorFilter(0xFF4CAF50.toInt()) // Green color for add
+        }
+        
         // Set click listeners
         holder.itemView.setOnClickListener {
             if (isBulkSelectionMode) {

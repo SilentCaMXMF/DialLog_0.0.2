@@ -33,11 +33,11 @@ class FavoritesManagementActivity : AppCompatActivity() {
     private lateinit var sortSpinner: Spinner
     
     // Adapters
-    private lateinit var favoritesManagementAdapter: FavoritesManagementAdapter
+    private lateinit var favoriteNumbersAdapter: FavoriteNumbersAdapter
     private lateinit var contactsSelectionAdapter: ContactsSelectionAdapter
     
     // Data
-    private var favoriteContacts = mutableListOf<Contact>()
+    private var favoriteNumbers = mutableListOf<FavoriteNumber>()
     private var allContacts = mutableListOf<Contact>()
     private var filteredContacts = mutableListOf<Contact>()
     
@@ -76,17 +76,17 @@ class FavoritesManagementActivity : AppCompatActivity() {
     }
     
     private fun setupRecyclerViews() {
-        // Favorites RecyclerView with drag to reorder and swipe to remove
+        // Favorites RecyclerView for phone numbers
         favoritesRecyclerView.layoutManager = LinearLayoutManager(this)
-        favoritesManagementAdapter = FavoritesManagementAdapter(
-            initialContacts = favoriteContacts,
-            onContactClick = { contact -> showFavoriteContactOptions(contact) },
-            onCallClick = { contact -> callContact(contact) },
-            onRemoveClick = { contact -> removeFavorite(contact) }
+        favoriteNumbersAdapter = FavoriteNumbersAdapter(
+            favoriteNumbers = favoriteNumbers,
+            onFavoriteClick = { favoriteNumber -> showFavoriteNumberOptions(favoriteNumber) },
+            onCallClick = { favoriteNumber -> callFavoriteNumber(favoriteNumber) },
+            onRemoveClick = { favoriteNumber -> removeFavoriteNumber(favoriteNumber) }
         )
-        favoritesRecyclerView.adapter = favoritesManagementAdapter
+        favoritesRecyclerView.adapter = favoriteNumbersAdapter
         
-        // Add swipe-to-remove functionality
+        // Add swipe-to-remove functionality  
         val itemTouchHelper = ItemTouchHelper(FavoriteItemTouchCallback())
         itemTouchHelper.attachToRecyclerView(favoritesRecyclerView)
         
@@ -152,21 +152,26 @@ class FavoritesManagementActivity : AppCompatActivity() {
                     allContacts.clear()
                     allContacts.addAll(loadedContacts)
                     
-                    // Separate favorites from non-favorites
-                    favoriteContacts.clear()
-                    favoriteContacts.addAll(allContacts.filter { it.isFavorite })
+                    // Load favorite phone numbers 
+                    favoriteNumbers.clear()
+                    favoriteNumbers.addAll(ContactManager.getFavoriteNumbers(this@FavoritesManagementActivity))
                     
+                    // Filter contacts to exclude those with numbers already in favorites
+                    val favoritePhoneNumbers = favoriteNumbers.map { it.phoneNumber.replace("\\s".toRegex(), "") }.toSet()
                     filteredContacts.clear()
-                    filteredContacts.addAll(allContacts.filter { !it.isFavorite })
+                    filteredContacts.addAll(allContacts.filter { contact ->
+                        val cleanContactNumber = contact.phoneNumber.replace("\\s".toRegex(), "")
+                        !favoritePhoneNumbers.contains(cleanContactNumber)
+                    })
                     
-                    Log.d("FavoritesManagement", "loadContacts: Separated into ${favoriteContacts.size} favorites and ${filteredContacts.size} non-favorites")
+                    Log.d("FavoritesManagement", "loadContacts: Separated into ${favoriteNumbers.size} favorite numbers and ${filteredContacts.size} non-favorites")
                     
                     updateUI()
                     
                     if (allContacts.isEmpty()) {
                         showError("No contacts found. Please check your contacts app and permissions.")
                     } else {
-                        Log.d("FavoritesManagement", "Loaded ${allContacts.size} total contacts, ${favoriteContacts.size} favorites")
+                        Log.d("FavoritesManagement", "Loaded ${allContacts.size} total contacts, ${favoriteNumbers.size} favorite numbers")
                     }
                 }
             } catch (e: Exception) {
@@ -179,14 +184,14 @@ class FavoritesManagementActivity : AppCompatActivity() {
     }
     
     private fun updateUI() {
-        Log.d("FavoritesManagement", "updateUI: Updating UI with ${favoriteContacts.size} favorites and ${filteredContacts.size} filtered contacts")
+        Log.d("FavoritesManagement", "updateUI: Updating UI with ${favoriteNumbers.size} favorite numbers and ${filteredContacts.size} filtered contacts")
         
         // Update favorites section
         try {
-            favoritesManagementAdapter.updateContacts(favoriteContacts)
-            favoritesCountText.text = "${favoriteContacts.size} favorite contacts"
+            favoriteNumbersAdapter.updateFavoriteNumbers(favoriteNumbers)
+            favoritesCountText.text = "${favoriteNumbers.size} favorite phone numbers"
             
-            if (favoriteContacts.isEmpty()) {
+            if (favoriteNumbers.isEmpty()) {
                 noFavoritesText.visibility = View.VISIBLE
                 favoritesRecyclerView.visibility = View.GONE
                 removeAllButton.isEnabled = false
@@ -195,7 +200,7 @@ class FavoritesManagementActivity : AppCompatActivity() {
                 noFavoritesText.visibility = View.GONE
                 favoritesRecyclerView.visibility = View.VISIBLE
                 removeAllButton.isEnabled = true
-                Log.d("FavoritesManagement", "updateUI: Showing ${favoriteContacts.size} favorites")
+                Log.d("FavoritesManagement", "updateUI: Showing ${favoriteNumbers.size} favorite numbers")
             }
         } catch (e: Exception) {
             Log.e("FavoritesManagement", "Error updating favorites UI", e)
@@ -234,12 +239,18 @@ class FavoritesManagementActivity : AppCompatActivity() {
     }
     
     private fun filterContacts(query: String) {
+        val favoritePhoneNumbers = favoriteNumbers.map { it.phoneNumber.replace("\\s".toRegex(), "") }.toSet()
+        
         filteredContacts.clear()
         if (query.isEmpty()) {
-            filteredContacts.addAll(allContacts.filter { !it.isFavorite })
+            filteredContacts.addAll(allContacts.filter { contact ->
+                val cleanContactNumber = contact.phoneNumber.replace("\\s".toRegex(), "")
+                !favoritePhoneNumbers.contains(cleanContactNumber)
+            })
         } else {
             filteredContacts.addAll(allContacts.filter { contact ->
-                !contact.isFavorite && (
+                val cleanContactNumber = contact.phoneNumber.replace("\\s".toRegex(), "")
+                !favoritePhoneNumbers.contains(cleanContactNumber) && (
                     contact.name.contains(query, ignoreCase = true) ||
                     contact.phoneNumber.contains(query, ignoreCase = true)
                 )
@@ -250,71 +261,63 @@ class FavoritesManagementActivity : AppCompatActivity() {
     
     private fun sortFavorites(sortType: Int) {
         when (sortType) {
-            0 -> favoriteContacts.sortBy { it.name } // A-Z
-            1 -> favoriteContacts.sortByDescending { it.name } // Z-A
-            2 -> favoriteContacts.reverse() // Recently added (reverse current order)
+            0 -> favoriteNumbers.sortBy { it.contactName } // A-Z
+            1 -> favoriteNumbers.sortByDescending { it.contactName } // Z-A
+            2 -> favoriteNumbers.reverse() // Recently added (reverse current order)
             3 -> {
                 // Sort by most calls - would need call count data
                 // For now, just sort by name
-                favoriteContacts.sortBy { it.name }
+                favoriteNumbers.sortBy { it.contactName }
             }
         }
-        favoritesManagementAdapter.updateContacts(favoriteContacts)
+        favoriteNumbersAdapter.updateFavoriteNumbers(favoriteNumbers)
     }
     
     private fun addToFavorites(contact: Contact) {
         coroutineScope.launch {
             try {
-                val success = ContactManager.toggleFavorite(this@FavoritesManagementActivity, contact.id)
-                if (success) {
-                    contact.isFavorite = true
-                    favoriteContacts.add(contact)
-                    filteredContacts.remove(contact)
-                    updateUI()
-                    showSuccess("${contact.name} added to favorites")
+                // Use new phone number-based favorites system
+                val isAlreadyFavorite = ContactManager.isPhoneNumberFavorite(this@FavoritesManagementActivity, contact.phoneNumber)
+                
+                if (isAlreadyFavorite) {
+                    // Remove from favorites
+                    val success = ContactManager.removeFavoriteNumber(this@FavoritesManagementActivity, contact.phoneNumber)
+                    if (success) {
+                        showSuccess("${contact.name} (${contact.phoneNumber}) removed from favorites")
+                        updateUI()
+                    } else {
+                        showError("Failed to remove ${contact.name} from favorites")
+                    }
                 } else {
-                    showError("Failed to add ${contact.name} to favorites")
+                    // Add to favorites
+                    val success = ContactManager.toggleFavoriteNumber(
+                        this@FavoritesManagementActivity, 
+                        contact.phoneNumber, 
+                        contact.name, 
+                        contact.id
+                    )
+                    if (success) {
+                        showSuccess("${contact.name} (${contact.phoneNumber}) added to favorites")
+                        updateUI()
+                    } else {
+                        showError("Failed to add ${contact.name} to favorites")
+                    }
                 }
             } catch (e: Exception) {
-                Log.e("FavoritesManagement", "Error adding favorite", e)
-                showError("Failed to add favorite: ${e.message}")
+                Log.e("FavoritesManagement", "Error toggling favorite", e)
+                showError("Failed to update favorite: ${e.message}")
             }
         }
     }
     
-    private fun removeFavorite(contact: Contact) {
-        AlertDialog.Builder(this)
-            .setTitle("Remove from Favorites?")
-            .setMessage("Remove ${contact.name} from favorites? Future calls will no longer be tracked automatically.")
-            .setPositiveButton("Remove") { _, _ ->
-                coroutineScope.launch {
-                    try {
-                        val success = ContactManager.toggleFavorite(this@FavoritesManagementActivity, contact.id)
-                        if (success) {
-                            contact.isFavorite = false
-                            favoriteContacts.remove(contact)
-                            filteredContacts.add(0, contact)
-                            updateUI()
-                            showSuccess("${contact.name} removed from favorites")
-                        } else {
-                            showError("Failed to remove ${contact.name} from favorites")
-                        }
-                    } catch (e: Exception) {
-                        Log.e("FavoritesManagement", "Error removing favorite", e)
-                        showError("Failed to remove favorite: ${e.message}")
-                    }
-                }
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
+    // removeFavorite method removed - replaced by removeFavoriteNumber
     
     private fun addAllFilteredToFavorites() {
         if (filteredContacts.isEmpty()) return
         
         AlertDialog.Builder(this)
             .setTitle("Add All to Favorites?")
-            .setMessage("Add all ${filteredContacts.size} contacts to favorites? This will enable automatic call tracking for all of them.")
+            .setMessage("Add all ${filteredContacts.size} phone numbers to favorites? This will enable automatic call tracking for all of them.")
             .setPositiveButton("Add All") { _, _ ->
                 coroutineScope.launch {
                     var successCount = 0
@@ -322,11 +325,13 @@ class FavoritesManagementActivity : AppCompatActivity() {
                     
                     for (contact in contactsToAdd) {
                         try {
-                            val success = ContactManager.toggleFavorite(this@FavoritesManagementActivity, contact.id)
+                            val success = ContactManager.toggleFavoriteNumber(
+                                this@FavoritesManagementActivity,
+                                contact.phoneNumber,
+                                contact.name,
+                                contact.id
+                            )
                             if (success) {
-                                contact.isFavorite = true
-                                favoriteContacts.add(contact)
-                                filteredContacts.remove(contact)
                                 successCount++
                             }
                         } catch (e: Exception) {
@@ -335,7 +340,7 @@ class FavoritesManagementActivity : AppCompatActivity() {
                     }
                     
                     updateUI()
-                    showSuccess("Added $successCount contacts to favorites")
+                    showSuccess("Added $successCount phone numbers to favorites")
                 }
             }
             .setNegativeButton("Cancel", null)
@@ -343,32 +348,30 @@ class FavoritesManagementActivity : AppCompatActivity() {
     }
     
     private fun removeAllFavorites() {
-        if (favoriteContacts.isEmpty()) return
+        if (favoriteNumbers.isEmpty()) return
         
         AlertDialog.Builder(this)
             .setTitle("Remove All Favorites?")
-            .setMessage("Remove all ${favoriteContacts.size} contacts from favorites? This will disable automatic call tracking for all of them.")
+            .setMessage("Remove all ${favoriteNumbers.size} favorite phone numbers? This will disable automatic call tracking for all of them.")
             .setPositiveButton("Remove All") { _, _ ->
                 coroutineScope.launch {
                     var successCount = 0
-                    val contactsToRemove = favoriteContacts.toList()
+                    val numbersToRemove = favoriteNumbers.toList()
                     
-                    for (contact in contactsToRemove) {
+                    for (favoriteNumber in numbersToRemove) {
                         try {
-                            val success = ContactManager.toggleFavorite(this@FavoritesManagementActivity, contact.id)
+                            val success = ContactManager.removeFavoriteNumber(this@FavoritesManagementActivity, favoriteNumber.phoneNumber)
                             if (success) {
-                                contact.isFavorite = false
-                                favoriteContacts.remove(contact)
-                                filteredContacts.add(0, contact)
+                                favoriteNumbers.remove(favoriteNumber)
                                 successCount++
                             }
                         } catch (e: Exception) {
-                            Log.e("FavoritesManagement", "Error removing ${contact.name} from favorites", e)
+                            Log.e("FavoritesManagement", "Error removing ${favoriteNumber.contactName} from favorites", e)
                         }
                     }
                     
                     updateUI()
-                    showSuccess("Removed $successCount contacts from favorites")
+                    showSuccess("Removed $successCount phone numbers from favorites")
                 }
             }
             .setNegativeButton("Cancel", null)
@@ -386,33 +389,78 @@ class FavoritesManagementActivity : AppCompatActivity() {
         }
     }
     
-    private fun showFavoriteContactOptions(contact: Contact) {
+    // NEW METHODS FOR FAVORITE NUMBERS
+    
+    private fun showFavoriteNumberOptions(favoriteNumber: FavoriteNumber) {
         val options = arrayOf(
             "View Call History",
             "View Analytics",
-            "Call Contact",
+            "Call Number",
             "Remove from Favorites"
         )
         
         AlertDialog.Builder(this)
-            .setTitle(contact.name)
+            .setTitle("${favoriteNumber.contactName}\n${favoriteNumber.phoneNumber}")
             .setItems(options) { _, which ->
                 when (which) {
                     0 -> {
                         val intent = Intent(this, CallHistoryActivity::class.java)
-                        intent.putExtra("contact_name", contact.name)
+                        intent.putExtra("contact_name", favoriteNumber.contactName)
                         startActivity(intent)
                     }
                     1 -> {
                         val intent = Intent(this, AnalyticsActivity::class.java)
-                        intent.putExtra("contact_name", contact.name)
+                        intent.putExtra("contact_name", favoriteNumber.contactName)
                         startActivity(intent)
                     }
-                    2 -> callContact(contact)
-                    3 -> removeFavorite(contact)
+                    2 -> callFavoriteNumber(favoriteNumber)
+                    3 -> removeFavoriteNumber(favoriteNumber)
                 }
             }
             .show()
+    }
+    
+    private fun callFavoriteNumber(favoriteNumber: FavoriteNumber) {
+        try {
+            val intent = Intent(Intent.ACTION_CALL)
+            intent.data = android.net.Uri.parse("tel:${favoriteNumber.phoneNumber}")
+            startActivity(intent)
+        } catch (e: Exception) {
+            Log.e("FavoritesManagement", "Error making call", e)
+            showError("Failed to make call")
+        }
+    }
+    
+    private fun removeFavoriteNumber(favoriteNumber: FavoriteNumber) {
+        AlertDialog.Builder(this)
+            .setTitle("Remove from Favorites?")
+            .setMessage("Remove ${favoriteNumber.contactName} (${favoriteNumber.phoneNumber}) from favorites? Future calls to this number will no longer be tracked automatically.")
+            .setPositiveButton("Remove") { _, _ ->
+                coroutineScope.launch {
+                    try {
+                        val success = ContactManager.removeFavoriteNumber(this@FavoritesManagementActivity, favoriteNumber.phoneNumber)
+                        if (success) {
+                            favoriteNumbers.remove(favoriteNumber)
+                            updateUI()
+                            showSuccess("${favoriteNumber.contactName} (${favoriteNumber.phoneNumber}) removed from favorites")
+                        } else {
+                            showError("Failed to remove ${favoriteNumber.contactName} from favorites")
+                        }
+                    } catch (e: Exception) {
+                        Log.e("FavoritesManagement", "Error removing favorite number", e)
+                        showError("Failed to remove favorite: ${e.message}")
+                    }
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+    
+    // LEGACY METHOD (can be removed later)
+    private fun showFavoriteContactOptions(contact: Contact) {
+        // This method is kept for compatibility but won't be used with the new system
+        Log.w("FavoritesManagement", "Legacy showFavoriteContactOptions called for ${contact.name}")
+        showError("This method should not be called with the new favorites system")
     }
     
     private fun updateBulkSelectionUI(selectedCount: Int) {
@@ -480,17 +528,17 @@ class FavoritesManagementActivity : AppCompatActivity() {
             val toPosition = target.adapterPosition
             
             // Reorder the list
-            val contact = favoriteContacts.removeAt(fromPosition)
-            favoriteContacts.add(toPosition, contact)
-            favoritesManagementAdapter.notifyItemMoved(fromPosition, toPosition)
+            val favoriteNumber = favoriteNumbers.removeAt(fromPosition)
+            favoriteNumbers.add(toPosition, favoriteNumber)
+            favoriteNumbersAdapter.notifyItemMoved(fromPosition, toPosition)
             
             return true
         }
         
         override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
             val position = viewHolder.adapterPosition
-            val contact = favoriteContacts[position]
-            removeFavorite(contact)
+            val favoriteNumber = favoriteNumbers[position]
+            removeFavoriteNumber(favoriteNumber)
         }
     }
 }

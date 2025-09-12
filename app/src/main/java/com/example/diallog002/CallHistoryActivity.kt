@@ -272,8 +272,10 @@ class CallHistoryActivity : AppCompatActivity() {
     private fun showQuickAnalytics() {
         coroutineScope.launch {
             try {
+                Log.d("CallHistoryActivity", "Starting showQuickAnalytics...")
                 // Get all-time analytics to show in the quick stats
                 val allTimeAnalytics = analyticsService.getGlobalAnalytics(TimeRange.ALL_TIME)
+                Log.d("CallHistoryActivity", "Analytics result: $allTimeAnalytics")
                 
                 allTimeAnalytics?.let { analytics ->
                     Log.d("CallHistoryActivity", "All Time: ${analytics.totalCalls} calls, ${analytics.getTalkListenRatioFormatted()}")
@@ -317,6 +319,8 @@ class CallHistoryActivity : AppCompatActivity() {
         super.onResume()
         // Reload call history when returning to this activity
         loadCallHistory()
+        // Also refresh the quick analytics
+        showQuickAnalytics()
     }
     
     override fun onDestroy() {

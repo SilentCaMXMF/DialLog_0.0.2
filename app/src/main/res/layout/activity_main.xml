@@ -93,55 +93,7 @@
 
         </LinearLayout>
 
-        <!-- Favorites Section -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="12dp">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="🎯 Auto-Tracked Favorites"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="@color/primaryColor" />
-
-            <TextView
-                android:id="@+id/favorites_count"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="0 contacts"
-                android:textSize="14sp"
-                android:textColor="@color/secondaryTextColor" />
-
-        </LinearLayout>
-
-        <!-- Favorites RecyclerView -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/favorites_recycler"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:nestedScrollingEnabled="false"
-            android:scrollbars="vertical"
-            android:layout_marginBottom="16dp"
-            android:maxHeight="600dp" />
-
-        <!-- Empty State for Favorites -->
-        <TextView
-            android:id="@+id/empty_favorites_text"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="No favorite contacts yet.\n\nTap 'Manage Favorites' above to add contacts for automatic call tracking."
-            android:textSize="16sp"
-            android:gravity="center"
-            android:padding="32dp"
-            android:textColor="@color/secondaryTextColor"
-            android:background="@drawable/empty_state_background"
-            android:visibility="gone" />
+        <!-- Favorites removed from home screen as requested -->
 
         <!-- Info Section -->
         <LinearLayout

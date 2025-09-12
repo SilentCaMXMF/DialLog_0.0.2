@@ -7,3 +7,10 @@ data class Contact(
     var isFavorite: Boolean = false
 )
 
+// New data class for favorite phone numbers
+data class FavoriteNumber(
+    val phoneNumber: String,
+    val contactName: String,
+    val contactId: String
+)
+

@@ -135,7 +135,20 @@ class CallAnalyticsService(private val context: Context) {
             TimeRange.ALL_TIME -> {
                 val analytics = callLogDao.getAllTimeAnalytics()
                 val callLogs = callLogDao.getAllCallLogs()
+                // Always return a result even if no data exists
                 analytics?.toGlobalAnalyticsResult(TimeRange.ALL_TIME, "all-time", callLogs)
+                    ?: AnalyticsResult(
+                        contactName = null,
+                        timeRange = TimeRange.ALL_TIME,
+                        period = "all-time",
+                        totalCalls = 0,
+                        totalSpeakingTimeMs = 0L,
+                        totalListeningTimeMs = 0L,
+                        totalDurationMs = 0L,
+                        averageTalkRatio = 0.0,
+                        averageCallDuration = 0.0,
+                        callLogs = emptyList()
+                    )
             }
         }
     }

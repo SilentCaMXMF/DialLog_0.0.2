@@ -72,10 +72,10 @@ interface CallLogDao {
         SELECT 
             contactName,
             COUNT(*) as totalCalls,
-            SUM(speakingTime) as totalSpeakingTime,
-            SUM(listeningTime) as totalListeningTime,
-            SUM(totalDuration) as totalDuration,
-            AVG(talkListenRatio) as averageTalkRatio
+            COALESCE(SUM(speakingTime), 0) as totalSpeakingTime,
+            COALESCE(SUM(listeningTime), 0) as totalListeningTime,
+            COALESCE(SUM(totalDuration), 0) as totalDuration,
+            COALESCE(AVG(talkListenRatio), 0.0) as averageTalkRatio
         FROM call_logs 
         WHERE contactName = :contactName
         GROUP BY contactName
@@ -86,10 +86,10 @@ interface CallLogDao {
         SELECT 
             contactName,
             COUNT(*) as totalCalls,
-            SUM(speakingTime) as totalSpeakingTime,
-            SUM(listeningTime) as totalListeningTime,
-            SUM(totalDuration) as totalDuration,
-            AVG(talkListenRatio) as averageTalkRatio
+            COALESCE(SUM(speakingTime), 0) as totalSpeakingTime,
+            COALESCE(SUM(listeningTime), 0) as totalListeningTime,
+            COALESCE(SUM(totalDuration), 0) as totalDuration,
+            COALESCE(AVG(talkListenRatio), 0.0) as averageTalkRatio
         FROM call_logs 
         WHERE contactName = :contactName AND callDate = :date
         GROUP BY contactName
@@ -100,10 +100,10 @@ interface CallLogDao {
         SELECT 
             contactName,
             COUNT(*) as totalCalls,
-            SUM(speakingTime) as totalSpeakingTime,
-            SUM(listeningTime) as totalListeningTime,
-            SUM(totalDuration) as totalDuration,
-            AVG(talkListenRatio) as averageTalkRatio
+            COALESCE(SUM(speakingTime), 0) as totalSpeakingTime,
+            COALESCE(SUM(listeningTime), 0) as totalListeningTime,
+            COALESCE(SUM(totalDuration), 0) as totalDuration,
+            COALESCE(AVG(talkListenRatio), 0.0) as averageTalkRatio
         FROM call_logs 
         WHERE contactName = :contactName AND callMonth = :month
         GROUP BY contactName
@@ -114,10 +114,10 @@ interface CallLogDao {
         SELECT 
             contactName,
             COUNT(*) as totalCalls,
-            SUM(speakingTime) as totalSpeakingTime,
-            SUM(listeningTime) as totalListeningTime,
-            SUM(totalDuration) as totalDuration,
-            AVG(talkListenRatio) as averageTalkRatio
+            COALESCE(SUM(speakingTime), 0) as totalSpeakingTime,
+            COALESCE(SUM(listeningTime), 0) as totalListeningTime,
+            COALESCE(SUM(totalDuration), 0) as totalDuration,
+            COALESCE(AVG(talkListenRatio), 0.0) as averageTalkRatio
         FROM call_logs 
         WHERE contactName = :contactName AND callYear = :year
         GROUP BY contactName
@@ -128,10 +128,10 @@ interface CallLogDao {
     @Query("""
         SELECT 
             COUNT(*) as totalCalls,
-            SUM(speakingTime) as totalSpeakingTime,
-            SUM(listeningTime) as totalListeningTime,
-            SUM(totalDuration) as totalDuration,
-            AVG(talkListenRatio) as averageTalkRatio
+            COALESCE(SUM(speakingTime), 0) as totalSpeakingTime,
+            COALESCE(SUM(listeningTime), 0) as totalListeningTime,
+            COALESCE(SUM(totalDuration), 0) as totalDuration,
+            COALESCE(AVG(talkListenRatio), 0.0) as averageTalkRatio
         FROM call_logs 
         WHERE callDate = :date
     """)
@@ -140,10 +140,10 @@ interface CallLogDao {
     @Query("""
         SELECT 
             COUNT(*) as totalCalls,
-            SUM(speakingTime) as totalSpeakingTime,
-            SUM(listeningTime) as totalListeningTime,
-            SUM(totalDuration) as totalDuration,
-            AVG(talkListenRatio) as averageTalkRatio
+            COALESCE(SUM(speakingTime), 0) as totalSpeakingTime,
+            COALESCE(SUM(listeningTime), 0) as totalListeningTime,
+            COALESCE(SUM(totalDuration), 0) as totalDuration,
+            COALESCE(AVG(talkListenRatio), 0.0) as averageTalkRatio
         FROM call_logs 
         WHERE callMonth = :month
     """)
@@ -152,10 +152,10 @@ interface CallLogDao {
     @Query("""
         SELECT 
             COUNT(*) as totalCalls,
-            SUM(speakingTime) as totalSpeakingTime,
-            SUM(listeningTime) as totalListeningTime,
-            SUM(totalDuration) as totalDuration,
-            AVG(talkListenRatio) as averageTalkRatio
+            COALESCE(SUM(speakingTime), 0) as totalSpeakingTime,
+            COALESCE(SUM(listeningTime), 0) as totalListeningTime,
+            COALESCE(SUM(totalDuration), 0) as totalDuration,
+            COALESCE(AVG(talkListenRatio), 0.0) as averageTalkRatio
         FROM call_logs
         WHERE callYear = :year
     """)
@@ -164,10 +164,10 @@ interface CallLogDao {
     @Query("""
         SELECT 
             COUNT(*) as totalCalls,
-            SUM(speakingTime) as totalSpeakingTime,
-            SUM(listeningTime) as totalListeningTime,
-            SUM(totalDuration) as totalDuration,
-            AVG(talkListenRatio) as averageTalkRatio
+            COALESCE(SUM(speakingTime), 0) as totalSpeakingTime,
+            COALESCE(SUM(listeningTime), 0) as totalListeningTime,
+            COALESCE(SUM(totalDuration), 0) as totalDuration,
+            COALESCE(AVG(talkListenRatio), 0.0) as averageTalkRatio
         FROM call_logs
     """)
     suspend fun getAllTimeAnalytics(): TimeRangeAnalytics?
