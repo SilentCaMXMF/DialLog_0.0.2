@@ -1,0 +1,6 @@
+• NEW: Individual phone number favorites - select specific numbers instead of entire contacts
+• IMPROVED: Cleaner home screen without favorites list display
+• FIXED: Call history counters now show correct values instead of zeros
+• ENHANCED: More precise call tracking control
+• PRIVACY: Better granular control over which numbers are tracked
+• UI: Updated favorites management with visual indicators for selected numbers
