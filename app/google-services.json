@@ -9,7 +9,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:303811393024:android:bdd04d6667c77ae5024ae5",
         "android_client_info": {
-          "package_name": "com.example.diallog002"
+          "package_name": "com.pedroocalado.diallog"
         }
       },
       "oauth_client": [],
@@ -28,7 +28,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:303811393024:android:2066348dfccaff05024ae5",
         "android_client_info": {
-          "package_name": "com.example.diallog_002"
+          "package_name": "com.pedroocalado.diallog"
         }
       },
       "oauth_client": [],

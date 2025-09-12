@@ -444,27 +444,65 @@ class MainActivity : AppCompatActivity() {
     private fun testCallLogging() {
         coroutineScope.launch {
             try {
-                // Create a test call log
-                val testCallLog = CallLog(
-                    contactName = "Test Contact",
-                    phoneNumber = "+1234567890",
-                    speakingTime = 30000L, // 30 seconds
-                    listeningTime = 45000L, // 45 seconds
-                    totalDuration = 75000L, // 1 minute 15 seconds
-                    timestamp = Date()
+                // Create multiple realistic test call logs with different dates
+                val testCallLogs = listOf(
+                    CallLog(
+                        contactName = "Alice Johnson",
+                        phoneNumber = "+1234567890",
+                        speakingTime = 45000L, // 45 seconds
+                        listeningTime = 30000L, // 30 seconds
+                        totalDuration = 75000L, // 1 minute 15 seconds
+                        timestamp = Date(System.currentTimeMillis() - 86400000) // 1 day ago
+                    ),
+                    CallLog(
+                        contactName = "Bob Smith",
+                        phoneNumber = "+1987654321",
+                        speakingTime = 120000L, // 2 minutes
+                        listeningTime = 180000L, // 3 minutes
+                        totalDuration = 300000L, // 5 minutes
+                        timestamp = Date(System.currentTimeMillis() - 172800000) // 2 days ago
+                    ),
+                    CallLog(
+                        contactName = "Alice Johnson",
+                        phoneNumber = "+1234567890",
+                        speakingTime = 90000L, // 1.5 minutes
+                        listeningTime = 60000L, // 1 minute
+                        totalDuration = 150000L, // 2.5 minutes
+                        timestamp = Date(System.currentTimeMillis() - 259200000) // 3 days ago
+                    ),
+                    CallLog(
+                        contactName = "Carol Davis",
+                        phoneNumber = "+1555123456",
+                        speakingTime = 60000L, // 1 minute
+                        listeningTime = 120000L, // 2 minutes
+                        totalDuration = 180000L, // 3 minutes
+                        timestamp = Date(System.currentTimeMillis() - 345600000) // 4 days ago
+                    ),
+                    CallLog(
+                        contactName = "Bob Smith",
+                        phoneNumber = "+1987654321",
+                        speakingTime = 200000L, // 3.33 minutes
+                        listeningTime = 100000L, // 1.67 minutes
+                        totalDuration = 300000L, // 5 minutes
+                        timestamp = Date() // Now
+                    )
                 )
                 
-                CallLogManager.addCallLog(testCallLog)
-                updateStatus("Test call log created successfully!")
+                for (testLog in testCallLogs) {
+                    CallLogManager.addCallLog(testLog)
+                    delay(100) // Small delay between inserts
+                }
                 
-                // Wait a moment and then navigate to history to see it
+                updateStatus("Created ${testCallLogs.size} test call logs successfully!")
+                
+                // Wait a moment and then navigate to history to see them
                 delay(1000)
                 val intent = Intent(this@MainActivity, CallHistoryActivity::class.java)
                 startActivity(intent)
                 
             } catch (e: Exception) {
-                Log.e("MainActivity", "Error creating test call log", e)
-                updateStatus("Error creating test call log: ${e.message}")
+                Log.e("MainActivity", "Error creating test call logs", e)
+                updateStatus("Error creating test call logs: ${e.message}")
             }
         }
     }

@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -18,6 +19,9 @@ class CallHistoryActivity : AppCompatActivity() {
     private lateinit var callHistoryAdapter: CallHistoryAdapter
     private lateinit var analyticsButton: Button
     private lateinit var analyticsService: CallAnalyticsService
+    private lateinit var totalCallsStat: TextView
+    private lateinit var totalDurationStat: TextView
+    private lateinit var avgRatioStat: TextView
     private var callLogs = mutableListOf<CallLog>()
     private var selectedContactName: String? = null
     
@@ -40,6 +44,9 @@ class CallHistoryActivity : AppCompatActivity() {
     private fun initializeViews() {
         callHistoryRecyclerView = findViewById(R.id.call_history_recycler)
         analyticsButton = findViewById(R.id.analytics_button)
+        totalCallsStat = findViewById(R.id.total_calls_stat)
+        totalDurationStat = findViewById(R.id.total_duration_stat)
+        avgRatioStat = findViewById(R.id.avg_ratio_stat)
         
         // Set up Call History RecyclerView
         callHistoryRecyclerView.layoutManager = LinearLayoutManager(this)
@@ -265,20 +272,43 @@ class CallHistoryActivity : AppCompatActivity() {
     private fun showQuickAnalytics() {
         coroutineScope.launch {
             try {
-                // Get today's analytics as a quick preview
-                val todayAnalytics = analyticsService.getGlobalAnalytics(TimeRange.DAY)
+                // Get all-time analytics to show in the quick stats
                 val allTimeAnalytics = analyticsService.getGlobalAnalytics(TimeRange.ALL_TIME)
                 
-                todayAnalytics?.let {
-                    Log.d("CallHistoryActivity", "Today: ${it.totalCalls} calls, ${it.getTalkListenRatioFormatted()}")
-                }
-                
-                allTimeAnalytics?.let {
-                    Log.d("CallHistoryActivity", "All Time: ${it.totalCalls} calls, ${it.getTalkListenRatioFormatted()}")
+                allTimeAnalytics?.let { analytics ->
+                    Log.d("CallHistoryActivity", "All Time: ${analytics.totalCalls} calls, ${analytics.getTalkListenRatioFormatted()}")
+                    
+                    // Update UI elements on the main thread
+                    runOnUiThread {
+                        totalCallsStat.text = analytics.totalCalls.toString()
+                        
+                        val totalMinutes = (analytics.totalDurationMs / 1000 / 60).toInt()
+                        totalDurationStat.text = if (totalMinutes > 0) "${totalMinutes}min" else "${(analytics.totalDurationMs / 1000).toInt()}s"
+                        
+                        val talkPercentage = if (analytics.totalDurationMs > 0) {
+                            ((analytics.totalSpeakingTimeMs.toDouble() / analytics.totalDurationMs.toDouble()) * 100).toInt()
+                        } else {
+                            0
+                        }
+                        avgRatioStat.text = "${talkPercentage}%"
+                    }
+                } ?: run {
+                    // No analytics data available
+                    Log.d("CallHistoryActivity", "No analytics data available")
+                    runOnUiThread {
+                        totalCallsStat.text = "0"
+                        totalDurationStat.text = "0min"
+                        avgRatioStat.text = "0%"
+                    }
                 }
                 
             } catch (e: Exception) {
                 Log.e("CallHistoryActivity", "Error loading quick analytics", e)
+                runOnUiThread {
+                    totalCallsStat.text = "Error"
+                    totalDurationStat.text = "Error"
+                    avgRatioStat.text = "Error"
+                }
             }
         }
     }
